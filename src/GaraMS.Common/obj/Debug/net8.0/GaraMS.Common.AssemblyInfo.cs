@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GaraMS.Common")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8f728efe91a2da14e6a056b08c6ac407124d182c")]
 [assembly: System.Reflection.AssemblyProductAttribute("GaraMS.Common")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GaraMS.Common")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
