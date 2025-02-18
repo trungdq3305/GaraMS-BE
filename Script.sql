@@ -31,8 +31,8 @@ CREATE TABLE Gara (
     UserId INT FOREIGN KEY REFERENCES Users(UserId)
 );
 
-CREATE TABLE Staffs (
-    StaffId INT IDENTITY(1,1) PRIMARY KEY,
+CREATE TABLE Manager (
+    ManagerId INT IDENTITY(1,1) PRIMARY KEY,
     Gender NVARCHAR(10),
     Salary DECIMAL(18,2),
     UserId INT FOREIGN KEY REFERENCES Users(UserId)
