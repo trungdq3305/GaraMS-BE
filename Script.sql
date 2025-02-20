@@ -209,3 +209,14 @@ CREATE TABLE InventorySupplier (
     InventoryId INT FOREIGN KEY REFERENCES Inventories(InventoryId),
     SupplierId INT FOREIGN KEY REFERENCES Suppliers(SupplierId)
 );
+SET IDENTITY_INSERT UserRoles ON;
+
+INSERT INTO UserRoles (RoleId, RoleName) VALUES 
+(1, 'Customer'),
+(2, 'Employee'),
+(3, 'Manager'),
+(4, 'Admin');
+
+SET IDENTITY_INSERT UserRoles OFF;
+GO
+
