@@ -1,5 +1,7 @@
 ﻿using GaraMS.Service.Services.AccountService;
+using GaraMS.Service.Services.AppointmentService;
 using GaraMS.Service.Services.AutheticateService;
+using GaraMS.Service.Services.ServiceService;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -16,8 +18,9 @@ namespace GaraMS.Service
             var assembly = typeof(DependencyInjection).Assembly;
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IAuthenticateService, AuthenticateService>();
-
-            return services;
+			services.AddScoped<IAppointmentService, AppointmentService>();
+			services.AddScoped<IServiceService, ServiceService>();
+			return services;
         }
     }
 }

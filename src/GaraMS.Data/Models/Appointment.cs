@@ -13,7 +13,7 @@ public partial class Appointment
 
     public string Note { get; set; }
 
-    public string Status { get; set; }
+    public string Status { get; set; } = "Pending";
 
     public DateTime? CreatedAt { get; set; }
 
