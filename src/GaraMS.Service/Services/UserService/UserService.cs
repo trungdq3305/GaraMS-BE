@@ -45,7 +45,6 @@ namespace GaraMS.Service.Services.UserService
                 Message = "Invalid request."
             };
 
-            // Optional: Validate token only if required
             if (!string.IsNullOrEmpty(token))
             {
                 var decodeModel = _token.decode(token);
@@ -60,7 +59,6 @@ namespace GaraMS.Service.Services.UserService
                 }
             }
 
-            // Check if user or email already exists in one query (if supported by your repo)
             var existingUser = await _userRepo.GetByUsernameAsync(model.UserName);
             if (existingUser != null)
             {
@@ -82,12 +80,66 @@ namespace GaraMS.Service.Services.UserService
                     Message = "This email is already registered."
                 };
             }
+            if (model.RoleId == null || model.RoleId < 1 || model.RoleId > 3)
+            {
+                res.IsSuccess = false;
+                res.Code = 400;
+                res.Message = "Invalid role";
+                return res;
+            }
+            if (model.RoleId == 2)
+            {
+                int newEmployeeId = await GenerateEmployeeID();
+                int newUserId = await GenerateID(); 
+
+                Employee newEmployee = new Employee
+                {
+                    EmployeeId = newEmployeeId,
+                    UserId = newUserId,
+                    Salary = 0,
+                    SpecializedId = null 
+                };
+
+                await _userRepo.AddEmployeeAsync(newEmployee);
+            }
+            if (model.RoleId == 1)
+            {
+                int newCustomerId = await GenerateCustomerID();
+                int newUserId = await GenerateID();
+
+                Customer newCustomer = new Customer
+                {
+                    CustomerId = newCustomerId,
+                    UserId = newUserId,
+                    Gender = "none",
+                    Note = ""
+                };
+
+                await _userRepo.AddCustomerAsync(newCustomer);
+            }
+            if (model.RoleId == 3)
+            {
+                int newManagerId = await GenerateManagerID();
+                int newUserId = await GenerateID();
+
+                Manager newManager = new Manager
+                {
+                    ManagerId = newManagerId,
+                    UserId = newUserId,
+                    Salary = 0,
+                    Gender = "none"
+                };
+
+                await _userRepo.AddManagerAsync(newManager);
+            }
+
 
             var phoneValidationResult = await _Validate.IsPhoneValid(model.PhoneNumber);
             if (phoneValidationResult != null) return phoneValidationResult;
             string hashedPassword = HashPass.HashPass.HashPassword(model.Password);
             var user = new User
             {
+                UserId = await GenerateID(),
                 UserName = model.UserName,
                 Password = hashedPassword,
                 Email = model.Email,
@@ -119,6 +171,24 @@ namespace GaraMS.Service.Services.UserService
         private async Task<int> GenerateID()
         {
             var userList = await _userRepo.GetAllUser();
+            int userLength = userList.Count() + 1;
+            return userLength;
+        }
+        private async Task<int> GenerateEmployeeID()
+        {
+            var userList = await _userRepo.GetAllEmployee();
+            int userLength = userList.Count() + 1;
+            return userLength;
+        }
+        private async Task<int> GenerateCustomerID()
+        {
+            var userList = await _userRepo.GetAllCustomer();
+            int userLength = userList.Count() + 1;
+            return userLength;
+        }
+        private async Task<int> GenerateManagerID()
+        {
+            var userList = await _userRepo.GetAllManager();
             int userLength = userList.Count() + 1;
             return userLength;
         }

@@ -19,7 +19,20 @@ namespace GaraMS.Data.Repositories.UserRepo
         }
         public async Task<List<User>> GetAllUser()
         {
-            return await _context.Users.ToListAsync();
+            return await _context.Users.AsNoTracking().ToListAsync();
+        }
+
+        public async Task<List<Customer>> GetAllCustomer()
+        {
+            return await _context.Customers.AsNoTracking().ToListAsync();
+        }
+        public async Task<List<Employee>> GetAllEmployee()
+        {
+            return await _context.Employees.AsNoTracking().ToListAsync();
+        }
+        public async Task<List<Manager>> GetAllManager()
+        {
+            return await _context.Managers.AsNoTracking().ToListAsync();
         }
 
         public async Task<User?> GetByUsernameAsync(string username)
@@ -38,6 +51,24 @@ namespace GaraMS.Data.Repositories.UserRepo
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
             return user;
+        }
+        public async Task<Customer> AddCustomerAsync(Customer customer)
+        {
+            _context.Customers.Add(customer);
+            await _context.SaveChangesAsync();
+            return customer;
+        }
+        public async Task<Manager> AddManagerAsync(Manager manager)
+        {
+            _context.Managers.Add(manager);
+            await _context.SaveChangesAsync();
+            return manager;
+        }
+        public async Task<Employee> AddEmployeeAsync(Employee employee)
+        {
+            _context.Employees.Add(employee);
+            await _context.SaveChangesAsync();
+            return employee;
         }
     } 
 
