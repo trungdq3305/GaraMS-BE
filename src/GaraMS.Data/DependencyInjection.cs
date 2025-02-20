@@ -1,4 +1,6 @@
-﻿using GaraMS.Data.Repositories.UserRepo;
+﻿using GaraMS.Data.Repositories.AppointmentRepo;
+using GaraMS.Data.Repositories.ServiceRepo;
+using GaraMS.Data.Repositories.UserRepo;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -15,7 +17,9 @@ namespace GaraMS.Data
         {
             var assembly = typeof(DependencyInjection).Assembly;
             services.AddScoped<IUserRepo, UserRepo>();
-            return services;
+			services.AddScoped<IAppointmentRepo, AppointmentRepo>();
+			services.AddScoped<IServiceRepo, ServiceRepo>();
+			return services;
         }
     }
 }

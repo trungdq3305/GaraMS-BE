@@ -1,10 +1,12 @@
-﻿using GaraMS.Data.Repositories.UserRepo;
+using GaraMS.Data.Repositories.UserRepo;
 using GaraMS.Service.Services.AccountService;
 using GaraMS.Service.Services.AutheticateService;
 using GaraMS.Service.Services.DashboardService;
 using GaraMS.Service.Services.TokenService;
 using GaraMS.Service.Services.UserService;
 using GaraMS.Service.Services.Validate;
+using GaraMS.Service.Services.AppointmentService;
+using GaraMS.Service.Services.ServiceService;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -25,6 +27,8 @@ namespace GaraMS.Service
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IValidateService, ValidateService>();
             services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IAppointmentService, AppointmentService>();
+			services.AddScoped<IServiceService, ServiceService>();
             return services;
         }
     }
