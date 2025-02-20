@@ -90,5 +90,23 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
 			await _context.SaveChangesAsync();
 			return true;
 		}
-	}
+        public async Task<bool> UpdateAppointmentStatusAsync(int id, string status, string reason)
+        {
+            var appointment = await _context.Appointments.FindAsync(id);
+            if (appointment == null) return false;
+            appointment.UpdatedAt = DateTime.UtcNow;
+			if(status == "Accept")
+			{
+				appointment.Status = "Accept";
+			}
+            if (status == "Reject")
+            {
+                appointment.Status = "Reject";
+				appointment.RejectReason = reason;
+            }
+            _context.Appointments.Update(appointment);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+    }
 }
