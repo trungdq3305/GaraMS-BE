@@ -2,11 +2,8 @@
 using GaraMS.Data.ViewModels.AutheticateModel;
 using GaraMS.Data.ViewModels.ResultModel;
 using GaraMS.Service.Services.AutheticateService;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using GaraMS.Service.Services.HashPass;
+
 
 namespace GaraMS.Service.Services.AccountService
 {
@@ -39,6 +36,7 @@ namespace GaraMS.Service.Services.AccountService
                     res.Message = "You do not have access!";
                     return res;
                 }
+                bool isMatch = HashPass.HashPass.VerifyPassword(user.password, existedUser.Password);
                 if (existedUser.Password != user.password)
                 {
                     res.IsSuccess = false;
@@ -76,6 +74,10 @@ namespace GaraMS.Service.Services.AccountService
                 res.Message = e.InnerException != null ? e.InnerException.Message + "\n" + e.StackTrace : e.Message + "\n" + e.StackTrace;
             }
             return res;
+        }
+        bool IAccountService.IsValidRole(string userRole, List<int> validRole)
+        {
+            return validRole.Any(role => role.ToString() == userRole);
         }
     }
 }
