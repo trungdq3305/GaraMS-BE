@@ -37,7 +37,7 @@ namespace GaraMS.Service.Services.AccountService
                     return res;
                 }
                 bool isMatch = HashPass.HashPass.VerifyPassword(user.password, existedUser.Password);
-                if (existedUser.Password != user.password)
+                if (!isMatch)
                 {
                     res.IsSuccess = false;
                     res.Code = 400;
