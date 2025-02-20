@@ -14,6 +14,7 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
 		Task<Appointment> GetAppointmentByIdAsync(int id);
 		Task<Appointment> CreateAppointmentAsync(AppointmentDTO dto);
 		Task<bool> UpdateAppointmentAsync(int id, AppointmentDTO dto);
-		Task<bool> DeleteAppointmentAsync(int id);
+        Task<bool> UpdateAppointmentStatusAsync(int id, string status, string reason);
+        Task<bool> DeleteAppointmentAsync(int id);
 	}
 }

@@ -51,8 +51,21 @@ namespace GaraMS.API.Controllers
 
 			return NoContent();
 		}
+        [HttpPut("Status-Update/{id}")]
+        public async Task<IActionResult> UpdateAppointmentStatus(
+    int id,
+    [FromQuery] string status,
+    [FromQuery] string reason)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
-		[HttpDelete("{id}")]
+            var success = await _appointmentService.UpdateAppointmentStatusAsync(id, status, reason);
+            if (!success) return NotFound();
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
 		public async Task<IActionResult> DeleteAppointment(int id)
 		{
 			var success = await _appointmentService.DeleteAppointmentAsync(id);

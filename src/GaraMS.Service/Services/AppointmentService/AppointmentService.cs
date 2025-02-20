@@ -40,5 +40,9 @@ namespace GaraMS.Service.Services.AppointmentService
 		{
 			return await _appointmentRepo.UpdateAppointmentAsync(id, DTO);
 		}
-	}
+        public async Task<bool> UpdateAppointmentStatusAsync(int id, string status, string reason)
+        {
+            return await _appointmentRepo.UpdateAppointmentStatusAsync(id, status,reason);
+        }
+    }
 }

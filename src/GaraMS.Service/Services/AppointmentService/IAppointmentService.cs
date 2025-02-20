@@ -13,7 +13,8 @@ namespace GaraMS.Service.Services.AppointmentService
 		Task<List<Appointment>> GetAllAppointmentsAsync();
 		Task<Appointment> GetAppointmentByIdAsync(int id);
 		Task<Appointment> CreateAppointmentAsync(AppointmentDTO DTO);
-		Task<bool> UpdateAppointmentAsync(int id, AppointmentDTO DTO);
+        Task<bool> UpdateAppointmentStatusAsync(int id, string status, string reason);
+        Task<bool> UpdateAppointmentAsync(int id, AppointmentDTO DTO);
 		Task<bool> DeleteAppointmentAsync(int id);
 	}
 }
