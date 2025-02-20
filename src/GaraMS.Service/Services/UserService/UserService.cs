@@ -159,57 +159,25 @@ namespace GaraMS.Service.Services.UserService
             }
             if (model.RoleId == 2)
             {
-                int newEmployeeId = await GenerateEmployeeID();
-                int newUserId = await GenerateID(); 
+                //int newEmployeeId = await GenerateEmployeeID();
+                //int newUserId = await GenerateID(); 
 
                 Employee newEmployee = new Employee
                 {
-                    EmployeeId = newEmployeeId,
-                    UserId = newUserId,
+                    //EmployeeId = newEmployeeId,
+                    //UserId = newUserId,
                     Salary = 0,
                     SpecializedId = null 
                 };
 
                 await _userRepo.AddEmployeeAsync(newEmployee);
             }
-            if (model.RoleId == 1)
-            {
-                int newCustomerId = await GenerateCustomerID();
-                int newUserId = await GenerateID();
-
-                Customer newCustomer = new Customer
-                {
-                    CustomerId = newCustomerId,
-                    UserId = newUserId,
-                    Gender = "none",
-                    Note = ""
-                };
-
-                await _userRepo.AddCustomerAsync(newCustomer);
-            }
-            if (model.RoleId == 3)
-            {
-                int newManagerId = await GenerateManagerID();
-                int newUserId = await GenerateID();
-
-                Manager newManager = new Manager
-                {
-                    ManagerId = newManagerId,
-                    UserId = newUserId,
-                    Salary = 0,
-                    Gender = "none"
-                };
-
-                await _userRepo.AddManagerAsync(newManager);
-            }
-
-
             var phoneValidationResult = await _Validate.IsPhoneValid(model.PhoneNumber);
             if (phoneValidationResult != null) return phoneValidationResult;
             string hashedPassword = HashPass.HashPass.HashPassword(model.Password);
             var user = new User
             {
-                UserId = await GenerateID(),
+                //UserId = await GenerateID(),
                 UserName = model.UserName,
                 Password = hashedPassword,
                 Email = model.Email,
@@ -221,8 +189,40 @@ namespace GaraMS.Service.Services.UserService
                 UpdatedAt = DateTime.UtcNow,
                 RoleId = model.RoleId ?? 4
             };
-
             await _userRepo.AddAsync(user);
+            if (model.RoleId == 1)
+            {
+                //int newCustomerId = await GenerateCustomerID();
+                //int newUserId = await GenerateID();
+
+                Customer newCustomer = new Customer
+                {
+                    //CustomerId = newCustomerId,
+                    UserId = user.UserId,
+                    Gender = "none",
+                    Note = ""
+                };
+
+                await _userRepo.AddCustomerAsync(newCustomer);
+            }
+            if (model.RoleId == 3)
+            {
+                //int newManagerId = await GenerateManagerID();
+                //int newUserId = await GenerateID();
+
+                Manager newManager = new Manager
+                {
+                    //ManagerId = newManagerId,
+                    //UserId = newUserId,
+                    Salary = 0,
+                    Gender = "none"
+                };
+
+                await _userRepo.AddManagerAsync(newManager);
+            }
+
+
+         
 
             return new ResultModel
             {
