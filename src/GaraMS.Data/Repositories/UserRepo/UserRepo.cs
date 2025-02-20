@@ -17,6 +17,11 @@ namespace GaraMS.Data.Repositories.UserRepo
         {
             _context = context;
         }
+
+        public async Task<User> GetLoginAsync(int id)
+        {
+            return await _context.Users.Include(u => u.Garas).FirstOrDefaultAsync(u => u.UserId == id);
+        }
         public async Task<List<User>> GetAllUser()
         {
             return await _context.Users.AsNoTracking().ToListAsync();

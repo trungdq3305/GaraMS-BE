@@ -9,6 +9,7 @@ namespace GaraMS.Data.Repositories.UserRepo
 {
     public interface IUserRepo
     {
+        public Task<User> GetLoginAsync(int id);
         public Task<User?> GetByUsernameAsync(string username);
         public Task<List<User>> GetAllUser();
         public Task<List<Customer>> GetAllCustomer();

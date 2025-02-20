@@ -2,6 +2,8 @@
 using GaraMS.Service.Services.UserService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace GaraMS.API.Controllers
 {
@@ -26,6 +28,13 @@ namespace GaraMS.API.Controllers
             var res = await _userService.CreateUser(token, userModel);
             return StatusCode(res.Code, res);
         }
-    }
 
+        [HttpGet("logged-in-user")]
+        public async Task<IActionResult> GetLoggedInUser()
+        {
+            string token = Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+            var res = await _userService.GetLoggedInUser(token);
+            return StatusCode(res.Code, res);
+        }
+    }
 }

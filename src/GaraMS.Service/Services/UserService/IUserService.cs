@@ -10,6 +10,8 @@ namespace GaraMS.Service.Services.UserService
 {
     public interface IUserService
     {
+        Task<ResultModel> GetLoggedInUser(string token);
         Task<ResultModel> CreateUser(string token, CreateUserModel model);
+
     }
 }

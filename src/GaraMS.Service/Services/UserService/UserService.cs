@@ -36,6 +36,76 @@ namespace GaraMS.Service.Services.UserService
             _Validate = userValidate;
 
         }
+
+        public async Task<ResultModel> GetLoggedInUser(string token)
+        {
+            var res = new ResultModel
+            {
+                IsSuccess = false,
+                Code = (int)HttpStatusCode.Unauthorized,
+                Message = "Invalid token."
+            };
+
+            if (string.IsNullOrEmpty(token))
+            {
+                return res;
+            }
+
+            var decodedUser = _token.decode(token);
+            if (decodedUser == null || string.IsNullOrEmpty(decodedUser.userid))
+            {
+                return res;
+            }
+
+            if (!int.TryParse(decodedUser.userid, out int userId))
+            {
+                return res;
+            }
+            if (userId <= 0)
+            {
+                return res;
+            }
+
+            var user = await _userRepo.GetLoginAsync(userId);
+            if (user == null)
+            {
+                return new ResultModel
+                {
+                    IsSuccess = false,
+                    Code = (int)HttpStatusCode.NotFound,
+                    Message = "User not found."
+                };
+            }
+
+            return new ResultModel
+            {
+                IsSuccess = true,
+                Code = (int)HttpStatusCode.OK,
+                Message = "User retrieved successfully.",
+                Data = new
+                {
+                    user.UserId,
+                    user.UserName,
+                    user.Email,
+                    user.PhoneNumber,
+                    user.FullName,
+                    user.Address,
+                    user.Status,
+                    user.RoleId,
+                    user.CreatedAt,
+                    Gara = user.Garas != null ? user.Garas.Select(g => new
+                    {
+                        g.GaraId,
+                        g.GaraNumber,
+                        g.UserId
+                    }).ToList() : null
+                }
+            };
+
+        }
+
+
+
         public async Task<ResultModel> CreateUser(string token, CreateUserModel model)
         {
             var res = new ResultModel
