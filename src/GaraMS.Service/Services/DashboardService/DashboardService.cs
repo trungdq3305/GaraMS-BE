@@ -52,21 +52,40 @@ namespace GaraMS.Service.Services.DashboardService
 
         public async Task<List<RecentAppointmentDTO>> GetRecentAppointmentsAsync(int count = 5)
         {
-            return await _context.Appointments
+            var appointments = await _context.Appointments
                 .Include(a => a.Vehicle)
                     .ThenInclude(v => v.Customer)
                         .ThenInclude(c => c.User)
                 .OrderByDescending(a => a.Date)
                 .Take(count)
-                .Select(a => new RecentAppointmentDTO
+                .Select(a => new
                 {
                     AppointmentId = a.AppointmentId,
-                    CustomerName = a.Vehicle.Customer.User.FullName,
-                    Date = (DateTime)a.Date,
+                    CustomerName = (a.Vehicle != null && a.Vehicle.Customer != null && a.Vehicle.Customer.User != null)
+                        ? a.Vehicle.Customer.User.FullName
+                        : "Unknown", // Handle potential nulls
+                    Date = a.Date, // Keep Date as is for later handling
                     Status = a.Status,
-                    TotalAmount = (decimal)a.Invoice.TotalAmount
+                    TotalAmount = (a.Invoice != null) ? a.Invoice.TotalAmount : 0 // Handle nullable decimal
                 })
                 .ToListAsync();
+
+            // Check if appointments were retrieved
+            if (appointments == null || !appointments.Any())
+            {
+                // Log or handle the case where no appointments were found
+                Console.WriteLine("No appointments found.");
+            }
+
+            // Now map to RecentAppointmentDTO
+            return appointments.Select(a => new RecentAppointmentDTO
+            {
+                AppointmentId = a.AppointmentId,
+                CustomerName = a.CustomerName,
+                Date = a.Date ?? DateTime.MinValue, // Handle nullable DateTime
+                Status = a.Status,
+                TotalAmount = (decimal)a.TotalAmount
+            }).ToList();
         }
 
         public async Task<List<TopServiceDTO>> GetTopServicesAsync(int count = 5)
