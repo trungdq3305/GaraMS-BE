@@ -20,39 +20,44 @@ namespace GaraMS.API.Controllers
 		public async Task<IActionResult> GetAllServices()
 		{
 			var result = await _serviceService.GetAllServicesAsync();
-			return Ok(result);
+			return StatusCode(result.Code, result.Message);
 		}
 
 		[HttpGet("service/{id}")]
 		public async Task<IActionResult> GetServiceById(int id)
 		{
 			var result = await _serviceService.GetServiceByIdAsync(id);
-			if (result == null) return NotFound("Service not found");
-			return Ok(result);
+			return StatusCode(result.Code, result.Message);
 		}
 
 		[HttpPost("service")]
-		public async Task<IActionResult> CreateService([FromBody] ServiceDTO serviceDto)
+		public async Task<IActionResult> CreateService([FromHeader] string authorization, [FromBody] ServiceDTO serviceDto)
 		{
-			var result = await _serviceService.CreateServiceAsync(serviceDto);
-			if (!result) return BadRequest("Failed to create service");
-			return Ok("Service created successfully");
+			if (string.IsNullOrEmpty(authorization))
+				return Unauthorized("Token is required");
+
+			var result = await _serviceService.CreateServiceAsync(authorization, serviceDto);
+			return StatusCode(result.Code, result.Message);
 		}
 
 		[HttpPut("service/{id}")]
-		public async Task<IActionResult> UpdateService(int id, [FromBody] ServiceDTO serviceDto)
+		public async Task<IActionResult> UpdateService([FromHeader] string authorization, int id, [FromBody] ServiceDTO serviceDto)
 		{
-			var result = await _serviceService.UpdateServiceAsync(id, serviceDto);
-			if (!result) return NotFound("Service not found or update failed");
-			return Ok("Service updated successfully");
+			if (string.IsNullOrEmpty(authorization))
+				return Unauthorized("Token is required");
+
+			var result = await _serviceService.UpdateServiceAsync(authorization, id, serviceDto);
+			return StatusCode(result.Code, result.Message);
 		}
 
 		[HttpDelete("service/{id}")]
-		public async Task<IActionResult> DeleteService(int id)
+		public async Task<IActionResult> DeleteService([FromHeader] string authorization, int id)
 		{
-			var result = await _serviceService.DeleteServiceAsync(id);
-			if (!result) return NotFound("Service not found");
-			return Ok("Service deleted successfully");
+			if (string.IsNullOrEmpty(authorization))
+				return Unauthorized("Token is required");
+
+			var result = await _serviceService.DeleteServiceAsync(authorization, id);
+			return StatusCode(result.Code, result.Message);
 		}
 	}
 }

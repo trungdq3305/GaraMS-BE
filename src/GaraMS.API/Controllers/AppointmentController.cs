@@ -28,7 +28,8 @@ namespace GaraMS.API.Controllers
 		public async Task<IActionResult> GetAppointmentById(int id)
 		{
 			var result = await _appointmentService.GetAppointmentByIdAsync(id);
-			if (result == null) return NotFound();
+			if (!result.IsSuccess) return NotFound(result);
+
 			return Ok(result);
 		}
 
@@ -37,8 +38,12 @@ namespace GaraMS.API.Controllers
 		{
 			if (!ModelState.IsValid) return BadRequest(ModelState);
 
-			var result = await _appointmentService.CreateAppointmentAsync(dto);
-			return CreatedAtAction(nameof(GetAppointmentById), new { id = result.AppointmentId }, result);
+			var token = Request.Headers["Authorization"].FirstOrDefault();
+			var result = await _appointmentService.CreateAppointmentAsync(token, dto);
+
+			if (!result.IsSuccess) return BadRequest(result);
+
+			return CreatedAtAction(nameof(GetAppointmentById), new { id = ((dynamic)result.Data)?.AppointmentId }, result);
 		}
 
 		[HttpPut("{id}")]
@@ -46,32 +51,34 @@ namespace GaraMS.API.Controllers
 		{
 			if (!ModelState.IsValid) return BadRequest(ModelState);
 
-			var success = await _appointmentService.UpdateAppointmentAsync(id, dto);
-			if (!success) return NotFound();
+			var token = Request.Headers["Authorization"].FirstOrDefault();
+			var result = await _appointmentService.UpdateAppointmentAsync(token, id, dto);
 
-			return NoContent();
+			if (!result.IsSuccess) return NotFound(result);
+
+			return Ok(result);
 		}
-        [HttpPut("Status-Update/{id}")]
-        public async Task<IActionResult> UpdateAppointmentStatus(
-    int id,
-    [FromQuery] string status,
-    [FromQuery] string reason)
-        {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var success = await _appointmentService.UpdateAppointmentStatusAsync(id, status, reason);
-            if (!success) return NotFound();
+		[HttpPut("Status-Update/{id}")]
+		public async Task<IActionResult> UpdateAppointmentStatus(int id, [FromQuery] string status, [FromQuery] string reason)
+		{
+			var token = Request.Headers["Authorization"].FirstOrDefault();
+			var result = await _appointmentService.UpdateAppointmentStatusAsync(token, id, status, reason);
 
-            return NoContent();
-        }
+			if (!result.IsSuccess) return NotFound(result);
 
-        [HttpDelete("{id}")]
+			return Ok(result);
+		}
+
+		[HttpDelete("{id}")]
 		public async Task<IActionResult> DeleteAppointment(int id)
 		{
-			var success = await _appointmentService.DeleteAppointmentAsync(id);
-			if (!success) return NotFound();
+			var token = Request.Headers["Authorization"].FirstOrDefault();
+			var result = await _appointmentService.DeleteAppointmentAsync(token, id);
 
-			return NoContent();
+			if (!result.IsSuccess) return NotFound(result);
+
+			return Ok(result);
 		}
 	}
 }

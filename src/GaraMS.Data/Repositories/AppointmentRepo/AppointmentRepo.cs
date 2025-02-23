@@ -33,7 +33,7 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
 			await _context.SaveChangesAsync();
 
 			// Adding services to the appointment
-			if (dto.ServiceIds.Any())
+			if (dto.ServiceIds != null && dto.ServiceIds.Any())
 			{
 				foreach (var serviceId in dto.ServiceIds)
 				{
@@ -48,14 +48,14 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
 			return appointment;
 		}
 
-		public async Task<bool> DeleteAppointmentAsync(int id)
+		public async Task<Appointment?> DeleteAppointmentAsync(int id)
 		{
 			var appointment = await _context.Appointments.FindAsync(id);
-			if (appointment == null) return false;
+			if (appointment == null) return null;
 
 			_context.Appointments.Remove(appointment);
 			await _context.SaveChangesAsync();
-			return true;
+			return appointment;
 		}
 
 		public async Task<List<Appointment>> GetAllAppointmentsAsync()
@@ -76,10 +76,10 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
 				.FirstOrDefaultAsync(a => a.AppointmentId == id);
 		}
 
-		public async Task<bool> UpdateAppointmentAsync(int id, AppointmentDTO dto)
+		public async Task<Appointment?> UpdateAppointmentAsync(int id, AppointmentDTO dto)
 		{
 			var appointment = await _context.Appointments.FindAsync(id);
-			if (appointment == null) return false;
+			if (appointment == null) return null;
 
 			appointment.Date = dto.Date;
 			appointment.Note = dto.Note;
@@ -88,25 +88,32 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
 
 			_context.Appointments.Update(appointment);
 			await _context.SaveChangesAsync();
-			return true;
+			return appointment;
 		}
-        public async Task<bool> UpdateAppointmentStatusAsync(int id, string status, string reason)
-        {
-            var appointment = await _context.Appointments.FindAsync(id);
-            if (appointment == null) return false;
-            appointment.UpdatedAt = DateTime.UtcNow;
-			if(status == "Accept")
+		public async Task<Appointment?> UpdateAppointmentStatusAsync(int id, string status, string reason)
+		{
+			var appointment = await _context.Appointments.FindAsync(id);
+			if (appointment == null) return null;
+
+			appointment.UpdatedAt = DateTime.UtcNow;
+
+			if (status.Equals("Accept", StringComparison.OrdinalIgnoreCase))
 			{
 				appointment.Status = "Accept";
 			}
-            if (status == "Reject")
-            {
-                appointment.Status = "Reject";
+			else if (status.Equals("Reject", StringComparison.OrdinalIgnoreCase))
+			{
+				appointment.Status = "Reject";
 				appointment.RejectReason = reason;
-            }
-            _context.Appointments.Update(appointment);
-            await _context.SaveChangesAsync();
-            return true;
-        }
-    }
+			}
+			else
+			{
+				return null; // Invalid status input
+			}
+
+			_context.Appointments.Update(appointment);
+			await _context.SaveChangesAsync();
+			return appointment;
+		}
+	}
 }
