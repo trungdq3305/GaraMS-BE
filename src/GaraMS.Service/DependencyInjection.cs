@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GaraMS.Service.Services.VehicleService;
 
 namespace GaraMS.Service
 {
@@ -29,6 +30,7 @@ namespace GaraMS.Service
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAppointmentService, AppointmentService>();
 			services.AddScoped<IServiceService, ServiceService>();
+            services.AddScoped<IVehicleService, VehicleService>();
             return services;
         }
     }
