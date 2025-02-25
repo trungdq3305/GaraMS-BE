@@ -32,14 +32,13 @@ namespace GaraMS.Data.Repositories.ServiceRepo
 			return await _context.Services.FindAsync(id);
 		}
 
-		public async Task<bool> RemoveAsync(int id)
+		public async Task<int> RemoveAsync(int id)
 		{
 			var service = await _context.Services.FindAsync(id);
-			if (service == null) return false;
+			if (service == null) return 0;
 
 			_context.Services.Remove(service);
-			await _context.SaveChangesAsync();
-			return true;
+			return await _context.SaveChangesAsync();
 		}
 
 		public async Task<int> UpdateAsync(Service service)

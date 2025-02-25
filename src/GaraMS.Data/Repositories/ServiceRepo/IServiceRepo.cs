@@ -13,6 +13,6 @@ namespace GaraMS.Data.Repositories.ServiceRepo
 		Task<Service> GetByIdAsync(int id);
 		Task<int> CreateAsync(Service service);
 		Task<int> UpdateAsync(Service service);
-		Task<bool> RemoveAsync(int id);
+		Task<int> RemoveAsync(int id);
 	}
 }
