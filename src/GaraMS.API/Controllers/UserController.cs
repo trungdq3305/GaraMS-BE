@@ -36,5 +36,13 @@ namespace GaraMS.API.Controllers
             var res = await _userService.GetLoggedInUser(token);
             return StatusCode(res.Code, res);
         }
+
+        [AllowAnonymous]
+        [HttpGet("confirm-status")]
+        public async Task<IActionResult> ConfirmUserStatus(int userId)
+        {
+            await _userService.ConfirmUserStatus(userId);
+            return Ok();
+        }
     }
 }

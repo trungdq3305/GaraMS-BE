@@ -12,6 +12,6 @@ namespace GaraMS.Service.Services.UserService
     {
         Task<ResultModel> GetLoggedInUser(string token);
         Task<ResultModel> CreateUser(string token, CreateUserModel model);
-
+        Task<ResultModel> ConfirmUserStatus(int userId);
     }
 }

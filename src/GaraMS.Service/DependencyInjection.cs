@@ -8,20 +8,16 @@ using GaraMS.Service.Services.Validate;
 using GaraMS.Service.Services.AppointmentService;
 using GaraMS.Service.Services.ServiceService;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using GaraMS.Service.Services.VehicleService;
+using GaraMS.Service.Services.Email;
+using Microsoft.Extensions.Configuration;
 
 namespace GaraMS.Service
 {
     public static class DependencyInjection
     {
-        public static IServiceCollection AddService(this IServiceCollection services)
+        public static IServiceCollection AddService(this IServiceCollection services, IConfiguration configuration)
         {
-            var assembly = typeof(DependencyInjection).Assembly;
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IAuthenticateService, AuthenticateService>();
             services.AddScoped<IDashboardService, DashboardService>();
@@ -29,8 +25,14 @@ namespace GaraMS.Service
             services.AddScoped<IValidateService, ValidateService>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAppointmentService, AppointmentService>();
-			services.AddScoped<IServiceService, ServiceService>();
+            services.AddScoped<IServiceService, ServiceService>();
             services.AddScoped<IVehicleService, VehicleService>();
+            services.AddSingleton(configuration);
+            services.AddScoped<IEmailService, EmailService>(provider =>
+            {
+                return new EmailService(configuration);
+            });
+
             return services;
         }
     }

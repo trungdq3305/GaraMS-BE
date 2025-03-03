@@ -4,14 +4,11 @@ using GaraMS.Data.ViewModels.CreateReqModel;
 using GaraMS.Data.ViewModels.ResultModel;
 using GaraMS.Service.Services.AccountService;
 using GaraMS.Service.Services.AutheticateService;
+using GaraMS.Service.Services.Email;
 using GaraMS.Service.Services.TokenService;
 using GaraMS.Service.Services.Validate;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Microsoft.Extensions.Configuration;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GaraMS.Service.Services.UserService
 {
@@ -22,11 +19,15 @@ namespace GaraMS.Service.Services.UserService
         private readonly IAccountService _accountService;
         private readonly IAuthenticateService _authentocateService;
         private readonly ITokenService _token;
+        private readonly IEmailService _emailService;
+        private readonly IConfiguration _configuration;
         public UserService(IUserRepo userRepo,
             ITokenService token,
             IAuthenticateService authenticateService,
             IAccountService accountService,
-            IValidateService userValidate
+            IValidateService userValidate,
+            IEmailService emailService,
+            IConfiguration configuration
             )
         {
             _userRepo = userRepo;
@@ -34,7 +35,8 @@ namespace GaraMS.Service.Services.UserService
             _authentocateService = authenticateService;
             _accountService = accountService;
             _Validate = userValidate;
-
+            _emailService = emailService;
+            _configuration = configuration;
         }
 
         public async Task<ResultModel> GetLoggedInUser(string token)
@@ -104,8 +106,6 @@ namespace GaraMS.Service.Services.UserService
 
         }
 
-
-
         public async Task<ResultModel> CreateUser(string token, CreateUserModel model)
         {
             var res = new ResultModel
@@ -159,13 +159,9 @@ namespace GaraMS.Service.Services.UserService
             }
             if (model.RoleId == 2)
             {
-                //int newEmployeeId = await GenerateEmployeeID();
-                //int newUserId = await GenerateID(); 
 
                 Employee newEmployee = new Employee
                 {
-                    //EmployeeId = newEmployeeId,
-                    //UserId = newUserId,
                     Salary = 0,
                     SpecializedId = null 
                 };
@@ -177,14 +173,13 @@ namespace GaraMS.Service.Services.UserService
             string hashedPassword = HashPass.HashPass.HashPassword(model.Password);
             var user = new User
             {
-                //UserId = await GenerateID(),
                 UserName = model.UserName,
                 Password = hashedPassword,
                 Email = model.Email,
                 PhoneNumber = model.PhoneNumber,
                 FullName = model.FullName,
                 Address = model.Address,
-                Status = true,
+                Status = false,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 RoleId = model.RoleId ?? 4
@@ -192,38 +187,38 @@ namespace GaraMS.Service.Services.UserService
             await _userRepo.AddAsync(user);
             if (model.RoleId == 1)
             {
-                //int newCustomerId = await GenerateCustomerID();
-                //int newUserId = await GenerateID();
-
                 Customer newCustomer = new Customer
                 {
-                    //CustomerId = newCustomerId,
                     UserId = user.UserId,
                     Gender = "none",
                     Note = ""
                 };
-
+                //await _userRepo.UpdateAsync(user);
+                await SendStatusChangeEmail(user);
                 await _userRepo.AddCustomerAsync(newCustomer);
+            }
+            if (model.RoleId == 2)
+            {
+
+                Employee newEmployee = new Employee
+                {
+                    Salary = 0,
+                    SpecializedId = null
+                };
+
+                await _userRepo.AddEmployeeAsync(newEmployee);
             }
             if (model.RoleId == 3)
             {
-                //int newManagerId = await GenerateManagerID();
-                //int newUserId = await GenerateID();
 
                 Manager newManager = new Manager
                 {
-                    //ManagerId = newManagerId,
-                    //UserId = newUserId,
                     Salary = 0,
                     Gender = "none"
                 };
 
                 await _userRepo.AddManagerAsync(newManager);
             }
-
-
-         
-
             return new ResultModel
             {
                 IsSuccess = true,
@@ -236,31 +231,60 @@ namespace GaraMS.Service.Services.UserService
                 }
             };
         }
+        private async Task SendStatusChangeEmail(User user)
+        {
+            var confirmationLink = $"https://localhost:5001/api/User/confirm?userId={user.UserId}";
+            var subject = "Status Change Request";
+            var body = $@"
+        <html>
+        <head></head>
+        <body>
+            <h2>Status Change Request</h2>
+            <p>Please click the button below to change the status. This link can only be used once.</p>
+            <p><strong>Hello {user.FullName},</strong></p>
+            <p>Please confirm your account by clicking the button below:</p>
+            <a href='{confirmationLink}' style='display: inline-block; padding: 10px 20px; font-size: 16px; color: white; background-color: #4CAF50; text-decoration: none; border-radius: 5px;'>
+                Confirm Account
+            </a>
+        </body>
+        </html>";
+
+            await _emailService.SendEmailAsync(user.Email, subject, body);
+        }
 
 
-        private async Task<int> GenerateID()
+        public async Task<ResultModel> ConfirmUserStatus(int userId)
         {
-            var userList = await _userRepo.GetAllUser();
-            int userLength = userList.Count() + 1;
-            return userLength;
-        }
-        private async Task<int> GenerateEmployeeID()
-        {
-            var userList = await _userRepo.GetAllEmployee();
-            int userLength = userList.Count() + 1;
-            return userLength;
-        }
-        private async Task<int> GenerateCustomerID()
-        {
-            var userList = await _userRepo.GetAllCustomer();
-            int userLength = userList.Count() + 1;
-            return userLength;
-        }
-        private async Task<int> GenerateManagerID()
-        {
-            var userList = await _userRepo.GetAllManager();
-            int userLength = userList.Count() + 1;
-            return userLength;
+            var user = await _userRepo.GetLoginAsync(userId);
+            if (user == null)
+            {
+                return new ResultModel
+                {
+                    IsSuccess = false,
+                    Code = 404,
+                    Message = "User not found."
+                };
+            }
+
+            if ((bool)user.Status)
+            {
+                return new ResultModel
+                {
+                    IsSuccess = false,
+                    Code = 400,
+                    Message = "Account already confirmed."
+                };
+            }
+
+            user.Status = true;
+            await _userRepo.UpdateAsync(user);
+
+            return new ResultModel
+            {
+                IsSuccess = true,
+                Code = 200,
+                Message = "Account confirmed successfully!"
+            };
         }
     }
 }

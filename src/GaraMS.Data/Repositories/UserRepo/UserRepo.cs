@@ -75,6 +75,11 @@ namespace GaraMS.Data.Repositories.UserRepo
             await _context.SaveChangesAsync();
             return employee;
         }
+        public async Task UpdateAsync(User user)
+        {
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+        }
     } 
 
 }
