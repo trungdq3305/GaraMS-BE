@@ -282,6 +282,10 @@ public partial class GaraManagementSystemContext : DbContext
         modelBuilder.Entity<Promotion>(entity =>
         {
             entity.HasKey(e => e.PromotionId).HasName("PK__Promotio__52C42FCF266F93FD");
+            entity.HasMany(e => e.ServicePromotions)
+                .WithOne(e => e.Promotion)
+                .HasForeignKey(e => e.PromotionId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             entity.Property(e => e.DiscountPercent).HasColumnType("decimal(5, 2)");
             entity.Property(e => e.EndDate).HasColumnType("datetime");
