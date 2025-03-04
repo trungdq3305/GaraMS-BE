@@ -1,4 +1,5 @@
 ﻿using GaraMS.Data.Models;
+using GaraMS.Data.ViewModels.ServiceModel;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -16,10 +17,21 @@ namespace GaraMS.Data.Repositories.ServiceRepo
 		{
 			_context = context;
 		}
-		public async Task<int> CreateAsync(Service service)
+
+		public async Task<Service> CreateServiceAsync(ServiceModel model)
 		{
+			var service = new Service
+			{
+				ServiceName = model.ServiceName,
+				TotalPrice = model.Price,
+				Description = model.Description,
+				CreatedAt = DateTime.UtcNow,
+				UpdatedAt = DateTime.UtcNow
+			};
+
 			_context.Services.Add(service);
-			return await _context.SaveChangesAsync();
+			await _context.SaveChangesAsync();
+			return service;
 		}
 
 		public async Task<List<Service>> GetAllAsync()
@@ -27,25 +39,33 @@ namespace GaraMS.Data.Repositories.ServiceRepo
 			return await _context.Services.ToListAsync();
 		}
 
-		public async Task<Service> GetByIdAsync(int id)
+		public async Task<Service> GetServiceByIdAsync(int id)
 		{
-			return await _context.Services.FindAsync(id);
+			return await _context.Services.FirstOrDefaultAsync(s => s.ServiceId == id);
 		}
 
-		public async Task<bool> RemoveAsync(int id)
+		public async Task<Service> RemoveServiceAsync(int id)
 		{
 			var service = await _context.Services.FindAsync(id);
-			if (service == null) return false;
+			if (service == null) return null;
 
 			_context.Services.Remove(service);
 			await _context.SaveChangesAsync();
-			return true;
+			return service;
 		}
 
-		public async Task<int> UpdateAsync(Service service)
+		public async Task<Service> UpdateServiceAsync(int id, ServiceModel model)
 		{
+			var service = await _context.Services.FindAsync(id);
+
+			service.ServiceName = model.ServiceName;
+			service.TotalPrice = model.Price;
+			service.Description = model.Description;
+			service.UpdatedAt = DateTime.UtcNow;
+
 			_context.Services.Update(service);
-			return await _context.SaveChangesAsync();
+			await _context.SaveChangesAsync();
+			return service;
 		}
 	}
 }

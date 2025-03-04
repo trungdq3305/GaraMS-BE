@@ -1,5 +1,7 @@
 ﻿using GaraMS.Data.Repositories.ServiceRepo;
-using GaraMS.Data.ViewModels.ServiceDTO;
+using GaraMS.Data.ViewModels.ResultModel;
+using GaraMS.Data.ViewModels.ServiceModel;
+using GaraMS.Service.Services.TokenService;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,58 +19,46 @@ namespace GaraMS.Service.Services.ServiceService
 			_serviceRepo = serviceRepo;
 		}
 
-		public async Task<bool> CreateServiceAsync(ServiceDTO serviceDto)
+		public async Task<ResultModel> CreateServiceAsync(string token, ServiceModel model)
 		{
-			var service = new GaraMS.Data.Models.Service
-			{
-				ServiceName = serviceDto.ServiceName,
-				TotalPrice = serviceDto.Price,
-				Description = serviceDto.Description
-			};
+			var service = await _serviceRepo.CreateServiceAsync(model);
+			if (service == null)
+				return new ResultModel { IsSuccess = false, Code = 400, Message = "Failed to create service" };
 
-			return await _serviceRepo.CreateAsync(service) > 0;
+			return new ResultModel { IsSuccess = true, Code = 201, Data = service, Message = "Service created successfully" };
 		}
 
-		public async Task<bool> DeleteServiceAsync(int id)
+		public async Task<ResultModel> DeleteServiceAsync(string token, int id)
 		{
-			return await _serviceRepo.RemoveAsync(id);
+			var service = await _serviceRepo.RemoveServiceAsync(id);
+			if (service == null)
+				return new ResultModel { IsSuccess = false, Code = 400, Message = "Failed to delete service" };
+
+			return new ResultModel { IsSuccess = true, Code = 200, Message = "Service deleted successfully" };
 		}
 
-		public async Task<List<ServiceDTO>> GetAllServicesAsync()
+		public async Task<ResultModel> GetAllServicesAsync()
 		{
 			var services = await _serviceRepo.GetAllAsync();
-			return services.Select(s => new ServiceDTO
-			{
-				ServiceName = s.ServiceName,
-				Price = (decimal)s.TotalPrice, // Change from s.Price to s.TotalPrice
-				Description = s.Description
-			}).ToList();
+			return new ResultModel { IsSuccess = true, Code = 200, Data = services, Message = "Services retrieved successfully" };
 		}
 
-		public async Task<ServiceDTO> GetServiceByIdAsync(int id)
+		public async Task<ResultModel> GetServiceByIdAsync(int id)
 		{
-			var service = await _serviceRepo.GetByIdAsync(id);
-			if (service == null) return null;
+			var service = await _serviceRepo.GetServiceByIdAsync(id);
+			if (service == null)
+				return new ResultModel { IsSuccess = false, Code = 404, Message = "Service not found" };
 
-			return new ServiceDTO
-			{
-				ServiceName = service.ServiceName,
-				Price = service.TotalPrice,
-				Description = service.Description
-			};
+			return new ResultModel { IsSuccess = true, Code = 200, Data = service, Message = "Service retrieved successfully" };
 		}
 
-		public async Task<bool> UpdateServiceAsync(int id, ServiceDTO serviceDto)
+		public async Task<ResultModel> UpdateServiceAsync(string token, int id, ServiceModel model)
 		{
-			var service = await _serviceRepo.GetByIdAsync(id);
-			if (service == null) return false;
+			var service = await _serviceRepo.UpdateServiceAsync(id, model);
+			if (service == null)
+				return new ResultModel { IsSuccess = false, Code = 400, Message = "Failed to update service" };
 
-			service.ServiceName = serviceDto.ServiceName;
-			service.TotalPrice = serviceDto.Price;
-			service.Description = serviceDto.Description;
-			service.UpdatedAt = DateTime.UtcNow;
-
-			return await _serviceRepo.UpdateAsync(service) > 0;
+			return new ResultModel { IsSuccess = true, Code = 200, Data = service, Message = "Service updated successfully" };
 		}
 	}
 }

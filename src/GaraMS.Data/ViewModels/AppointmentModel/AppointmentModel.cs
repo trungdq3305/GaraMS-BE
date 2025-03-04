@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GaraMS.Data.ViewModels.AppointmentDTO
+namespace GaraMS.Data.ViewModels.AppointmentModel
 {
-	public class AppointmentDTO
+	public class AppointmentModel
 	{
 		public int? AppointmentId { get; set; }
 		public DateTime? Date { get; set; }

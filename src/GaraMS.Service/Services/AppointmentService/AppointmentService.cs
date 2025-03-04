@@ -1,6 +1,7 @@
 ﻿using GaraMS.Data.Models;
 using GaraMS.Data.Repositories.AppointmentRepo;
-using GaraMS.Data.ViewModels.AppointmentDTO;
+using GaraMS.Data.ViewModels.AppointmentModel;
+using GaraMS.Data.ViewModels.ResultModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,33 +17,56 @@ namespace GaraMS.Service.Services.AppointmentService
 		{
 			_appointmentRepo = appointmentRepo;
 		}
-		public async Task<Appointment> CreateAppointmentAsync(AppointmentDTO DTO)
+
+		public async Task<ResultModel> CreateAppointmentAsync(string token, AppointmentModel model)
 		{
-			return await _appointmentRepo.CreateAppointmentAsync(DTO);
+			var appointment = await _appointmentRepo.CreateAppointmentAsync(model);
+			if (appointment == null)
+				return new ResultModel { IsSuccess = false, Code = 400, Message = "Failed to create appointment" };
+
+			return new ResultModel { IsSuccess = true, Code = 201, Data = appointment, Message = "Appointment created successfully" };
 		}
 
-		public async Task<bool> DeleteAppointmentAsync(int id)
+		public async Task<ResultModel> DeleteAppointmentAsync(string token, int id)
 		{
-			return await _appointmentRepo.DeleteAppointmentAsync(id);
+			var appointment = await _appointmentRepo.DeleteAppointmentAsync(id);
+			if (appointment == null)
+				return new ResultModel { IsSuccess = false, Code = 400, Message = "Failed to delete appointment" };
+
+			return new ResultModel { IsSuccess = true, Code = 200, Message = "Appointment deleted successfully" };
 		}
 
-		public async Task<List<Appointment>> GetAllAppointmentsAsync()
+		public async Task<ResultModel> GetAllAppointmentsAsync()
 		{
-			return await _appointmentRepo.GetAllAppointmentsAsync();
+			var appointments = await _appointmentRepo.GetAllAppointmentsAsync();
+			return new ResultModel { IsSuccess = true, Code = 200, Data = appointments, Message = "Appointments retrieved successfully" };
 		}
 
-		public async Task<Appointment> GetAppointmentByIdAsync(int id)
+		public async Task<ResultModel> GetAppointmentByIdAsync(int id)
 		{
-			return await _appointmentRepo.GetAppointmentByIdAsync(id);
+			var appointment = await _appointmentRepo.GetAppointmentByIdAsync(id);
+			if (appointment == null)
+				return new ResultModel { IsSuccess = false, Code = 404, Message = "Appointment not found" };
+
+			return new ResultModel { IsSuccess = true, Code = 200, Data = appointment, Message = "Appointment retrieved successfully" };
 		}
 
-		public async Task<bool> UpdateAppointmentAsync(int id, AppointmentDTO DTO)
+		public async Task<ResultModel> UpdateAppointmentAsync(string token, int id, AppointmentModel model)
 		{
-			return await _appointmentRepo.UpdateAppointmentAsync(id, DTO);
+			var appointment = await _appointmentRepo.UpdateAppointmentAsync(id, model);
+			if (appointment == null)
+				return new ResultModel { IsSuccess = false, Code = 400, Message = "Failed to update appointment" };
+
+			return new ResultModel { IsSuccess = true, Code = 200, Data = appointment, Message = "Appointment updated successfully" };
 		}
-        public async Task<bool> UpdateAppointmentStatusAsync(int id, string status, string reason)
-        {
-            return await _appointmentRepo.UpdateAppointmentStatusAsync(id, status,reason);
-        }
-    }
+
+		public async Task<ResultModel> UpdateAppointmentStatusAsync(string token, int id, string status, string reason)
+		{
+			var appointment = await _appointmentRepo.UpdateAppointmentStatusAsync(id, status, reason);
+			if (appointment == null)
+				return new ResultModel { IsSuccess = false, Code = 400, Message = "Failed to update appointment status" };
+
+			return new ResultModel { IsSuccess = true, Code = 200, Data = appointment, Message = "Appointment status updated successfully" };
+		}
+	}
 }

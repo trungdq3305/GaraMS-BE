@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GaraMS.Data.ViewModels.ServiceDTO
+namespace GaraMS.Data.ViewModels.ServiceModel
 {
-	public class ServiceDTO
+	public class ServiceModel
 	{
         public int ServiceId { get; set; }
         public string ServiceName { get; set; }

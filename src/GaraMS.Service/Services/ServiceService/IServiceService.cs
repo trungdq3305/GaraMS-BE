@@ -1,4 +1,5 @@
-﻿using GaraMS.Data.ViewModels.ServiceDTO;
+﻿using GaraMS.Data.ViewModels.ResultModel;
+using GaraMS.Data.ViewModels.ServiceModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,10 +10,10 @@ namespace GaraMS.Service.Services.ServiceService
 {
 	public interface IServiceService
 	{
-		Task<List<ServiceDTO>> GetAllServicesAsync();
-		Task<ServiceDTO> GetServiceByIdAsync(int id);
-		Task<bool> CreateServiceAsync(ServiceDTO serviceDto);
-		Task<bool> UpdateServiceAsync(int id, ServiceDTO serviceDto);
-		Task<bool> DeleteServiceAsync(int id);
+		Task<ResultModel> GetAllServicesAsync();
+		Task<ResultModel> GetServiceByIdAsync(int id);
+		Task<ResultModel> CreateServiceAsync(string token, ServiceModel model);
+		Task<ResultModel> UpdateServiceAsync(string token, int id, ServiceModel model);
+		Task<ResultModel> DeleteServiceAsync(string token, int id);
 	}
 }
