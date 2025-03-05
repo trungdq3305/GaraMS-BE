@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using GaraMS.Service.Services.VehicleService;
 using GaraMS.Service.Services.Email;
 using Microsoft.Extensions.Configuration;
+using GaraMS.Service.Services.PromotionService;
 
 namespace GaraMS.Service
 {
@@ -27,6 +28,7 @@ namespace GaraMS.Service
             services.AddScoped<IAppointmentService, AppointmentService>();
             services.AddScoped<IServiceService, ServiceService>();
             services.AddScoped<IVehicleService, VehicleService>();
+            services.AddScoped<IPromotionService, PromotionService>();
             services.AddSingleton(configuration);
             services.AddScoped<IEmailService, EmailService>(provider =>
             {
