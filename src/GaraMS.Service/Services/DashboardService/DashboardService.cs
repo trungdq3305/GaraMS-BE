@@ -171,11 +171,6 @@ namespace GaraMS.Service.Services.DashboardService
                         ServiceId = s.ServiceId,
                         ServiceName = s.ServiceName ?? "Unknown",
                         BookingCount = s.AppointmentServices.Count,
-                        Revenue = s.AppointmentServices
-                            .Where(a => a.Appointment != null &&
-                                       a.Appointment.Invoice != null &&
-                                       a.Appointment.Invoice.TotalAmount.HasValue)
-                            .Sum(a => a.Appointment.Invoice.TotalAmount ?? 0m)
                     })
                     .OrderByDescending(s => s.BookingCount)
                     .Take(count)
@@ -214,8 +209,8 @@ namespace GaraMS.Service.Services.DashboardService
                     query = query.Where(i => i.Date <= endDate);
 
                 var totalRevenue = await query
-                    .Where(i => i.TotalAmount.HasValue)  // Only include invoices with values
-                    .SumAsync(i => i.TotalAmount ?? 0m);  // Use null-coalescing operator
+                   .Where(i => i.TotalAmount.HasValue && i.Status == "1")  // Only include invoices with status "1"
+                   .SumAsync(i => i.TotalAmount ?? 0m);
 
                 return new ResultModel
                 {

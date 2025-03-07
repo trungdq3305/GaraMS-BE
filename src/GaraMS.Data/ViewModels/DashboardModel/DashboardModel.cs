@@ -36,6 +36,5 @@ namespace GaraMS.Data.ViewModels.DashboardModel
         public int ServiceId { get; set; }
         public string ServiceName { get; set; }
         public int BookingCount { get; set; }
-        public decimal Revenue { get; set; }
     }
 }
