@@ -171,12 +171,6 @@ namespace GaraMS.Service.Services.DashboardService
                         ServiceId = s.ServiceId,
                         ServiceName = s.ServiceName ?? "Unknown",
                         BookingCount = s.AppointmentServices.Count,
-                        Revenue = s.AppointmentServices
-                    .Where(a => a.Appointment != null &&
-                               a.Appointment.Invoice != null &&
-                               a.Appointment.Invoice.TotalAmount.HasValue &&
-                               a.Appointment.Invoice.Status == "1")  // Only include invoices with status "1"
-                    .Sum(a => a.Appointment.Invoice.TotalAmount ?? 0m)
                     })
                     .OrderByDescending(s => s.BookingCount)
                     .Take(count)
