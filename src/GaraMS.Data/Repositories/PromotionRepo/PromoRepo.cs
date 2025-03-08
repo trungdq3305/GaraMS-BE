@@ -48,7 +48,7 @@ namespace GaraMS.Data.Repository
         {
             try
             {
-                var existingPromotion = await _context.Promotions.FindAsync(id);
+                var existingPromotion = await GetPromotionByIdAsync(id);
                 if (existingPromotion == null)
                     return false;
 
@@ -70,31 +70,19 @@ namespace GaraMS.Data.Repository
 
         public async Task<bool> DeletePromotionAsync(int id)
         {
-    try
-    {
-        var promotion = await _context.Promotions
-            .Include(p => p.ServicePromotions)  // Include related ServicePromotions
-            .FirstOrDefaultAsync(p => p.PromotionId == id);
+            try
+            {
+                var promotion = await GetPromotionByIdAsync(id);
+                if (promotion == null) return false;
 
-        if (promotion == null)
-            return false;
-
-        // Remove all related ServicePromotion records first
-        if (promotion.ServicePromotions != null)
-        {
-            _context.ServicePromotions.RemoveRange(promotion.ServicePromotions);
-        }
-
-        // Then remove the promotion
-        _context.Promotions.Remove(promotion);
-        
-        await _context.SaveChangesAsync();
-        return true;
-    }
-    catch (Exception)
-    {
-        return false;
-    }
+                _context.Promotions.Remove(promotion);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public async Task<List<Promotion>> GetActivePromotionsAsync()
@@ -104,6 +92,47 @@ namespace GaraMS.Data.Repository
                 .Include(p => p.ServicePromotions)
                 .Where(p => p.StartDate <= currentDate && p.EndDate >= currentDate)
                 .ToListAsync();
+        }
+
+        public async Task<(decimal finalPrice, decimal discountAmount)> CalculateDiscountedPrice(int serviceId, decimal basePrice)
+        {
+            var activePromotions = await GetPromotionsForService(serviceId);
+            if (!activePromotions.Any()) return (basePrice, 0);
+
+            // Get the highest discount percentage from active promotions and ensure it's not null
+            var maxDiscount = activePromotions.Max(p => p.DiscountPercent) ?? 0;
+            if (maxDiscount == 0) return (basePrice, 0);
+
+            var discountAmount = basePrice * (maxDiscount / 100m);
+            var finalPrice = basePrice - discountAmount;
+            
+            return (finalPrice, discountAmount);
+        }
+
+        public async Task<List<Promotion>> GetPromotionsForService(int serviceId)
+        {
+            var currentDate = DateTime.Now; // Use current date
+            
+            // Debug: Print the current date and service ID
+            Console.WriteLine($"Checking promotions for service {serviceId} at {currentDate}");
+            
+            var promotions = await _context.Promotions
+                .Include(p => p.ServicePromotions)
+                .Where(p => p.ServicePromotions.Any(sp => sp.ServiceId == serviceId)
+                    && p.StartDate <= currentDate 
+                    && p.EndDate >= currentDate)
+                .ToListAsync();
+            
+            // Debug: Print how many promotions were found
+            Console.WriteLine($"Found {promotions.Count} active promotions");
+            
+            return promotions;
+        }
+
+        public async Task<bool> IsPromotionValidForService(int promotionId, int serviceId)
+        {
+            return await _context.ServicePromotions
+                .AnyAsync(sp => sp.PromotionId == promotionId && sp.ServiceId == serviceId);
         }
     }
 } 

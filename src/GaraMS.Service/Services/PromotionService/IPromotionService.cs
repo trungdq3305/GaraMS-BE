@@ -12,5 +12,6 @@ namespace GaraMS.Service.Services.PromotionService
         Task<ResultModel> UpdatePromotionAsync(string? token, int id, UpdatePromotionModel promotionModel);
         Task<ResultModel> DeletePromotionAsync(string? token, int id);
         Task<ResultModel> GetActivePromotionsAsync(string? token);
+        Task<ResultModel> CalculateServiceDiscountAsync(string? token, int serviceId, decimal originalPrice);
     }
 } 

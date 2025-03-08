@@ -13,8 +13,8 @@ namespace GaraMS.Data.ViewModels.PromotionModel
         public string PromotionName { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
-        public decimal? DiscountPercent { get; set; }
-
+        public decimal DiscountPercent { get; set; }  // Changed to non-nullable
+        public decimal DiscountAmount { get; set; }   // Added to store calculated discount
         public List<ServicePromotionDTO> ServicePromotions { get; set; } = new();
     }
 
@@ -23,22 +23,24 @@ namespace GaraMS.Data.ViewModels.PromotionModel
         public int ServicePromotionId { get; set; }
         public int ServiceId { get; set; }
         public int PromotionId { get; set; }
+        public decimal OriginalPrice { get; set; }    // Added
+        public decimal DiscountedPrice { get; set; }  // Added
     }
 
     public class CreatePromotionModel
     {
         public string PromotionName { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
-        public decimal? DiscountPercent { get; set; }
-        public List<int> ServiceIds { get; set; } = new(); // Just need the service IDs
+        public DateTime StartDate { get; set; }       // Changed to non-nullable
+        public DateTime EndDate { get; set; }         // Changed to non-nullable
+        public decimal DiscountPercent { get; set; }  // Changed to non-nullable
+        public List<int> ServiceIds { get; set; } = new();
     }
 
     public class UpdatePromotionModel
     {
         public string PromotionName { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
-        public decimal? DiscountPercent { get; set; }
+        public DateTime StartDate { get; set; }       // Changed to non-nullable
+        public DateTime EndDate { get; set; }         // Changed to non-nullable
+        public decimal DiscountPercent { get; set; }  // Changed to non-nullable
     }
 }
