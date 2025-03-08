@@ -1,4 +1,5 @@
 ﻿using GaraMS.Data.ViewModels.PromotionModel;
+using GaraMS.Data.ViewModels.ResultModel;
 using GaraMS.Data.ViewModels.VehicleModel;
 using GaraMS.Service.Services.PromotionService;
 using Microsoft.AspNetCore.Authorization;
@@ -64,7 +65,31 @@ namespace GaraMS.API.Controllers
             var res = await _promotionService.DeletePromotionAsync(token, id);
             return StatusCode(res.Code, res);
         }
+        [HttpGet("calculate-discount")]
+        public async Task<IActionResult> CalculateDiscount([FromQuery] int serviceId, [FromQuery] decimal originalPrice)
+        {
+            try
+            {
+                string? token = Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+                var result = await _promotionService.CalculateServiceDiscountAsync(token, serviceId, originalPrice);
 
-        
+                if (!result.IsSuccess)
+                {
+                    return StatusCode(result.Code, result);
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ResultModel
+                {
+                    IsSuccess = false,
+                    Code = 500,
+                    Message = $"Internal server error: {ex.Message}"
+                });
+            }
+
+        }
     }
 }

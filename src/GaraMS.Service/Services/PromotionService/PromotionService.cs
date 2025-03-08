@@ -1,5 +1,6 @@
 using GaraMS.Data.Models;
 using GaraMS.Data.Repositories.PromotionRepo;
+using GaraMS.Data.Repositories.ServiceRepo;
 using GaraMS.Data.Repository;
 using GaraMS.Data.ViewModels.PromotionModel;
 using GaraMS.Data.ViewModels.ResultModel;
@@ -20,16 +21,19 @@ namespace GaraMS.Service.Services.PromotionService
         private readonly IAccountService _accountService;
         private readonly IAuthenticateService _authentocateService;
         private readonly ITokenService _token;
+        private readonly IServiceRepo _serviceRepo;
 
         public PromotionService(IPromoRepo promoRepo
             , IAuthenticateService authenticateService
             , IAccountService accountService
-            , ITokenService tokenService)
+            , ITokenService tokenService
+            , IServiceRepo serviceRepo)
         {
             _promoRepo = promoRepo;
             _token = tokenService;
             _accountService = accountService;
             _authentocateService = authenticateService;
+            _serviceRepo = serviceRepo;
         }
 
         public async Task<ResultModel> GetAllPromotionsAsync(string? token)
@@ -49,7 +53,7 @@ namespace GaraMS.Service.Services.PromotionService
             };
 
             var decodeModel = _token.decode(token);
-            var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 4 });
+            var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 3 });
             if (!isValidRole)
             {
                 resultModel.IsSuccess = false;
@@ -98,7 +102,7 @@ namespace GaraMS.Service.Services.PromotionService
             };
 
             var decodeModel = _token.decode(token);
-            var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 4 });
+            var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 3 });
             if (!isValidRole)
             {
                 resultModel.IsSuccess = false;
@@ -147,7 +151,7 @@ namespace GaraMS.Service.Services.PromotionService
             };
 
             var decodeModel = _token.decode(token);
-            var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 4 });
+            var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 3 });
             if (!isValidRole)
             {
                 resultModel.IsSuccess = false;
@@ -165,6 +169,26 @@ namespace GaraMS.Service.Services.PromotionService
                 return res;
             }
 
+            if (promotionModel.DiscountPercent <= 0 || promotionModel.DiscountPercent > 100)
+            {
+                return new ResultModel
+                {
+                    IsSuccess = false,
+                    Code = (int)HttpStatusCode.BadRequest,
+                    Message = "Discount percentage must be between 0 and 100"
+                };
+            }
+
+            if (promotionModel.StartDate >= promotionModel.EndDate)
+            {
+                return new ResultModel
+                {
+                    IsSuccess = false,
+                    Code = (int)HttpStatusCode.BadRequest,
+                    Message = "End date must be after start date"
+                };
+            }
+
             var promotion = new Promotion
             {
                 PromotionName = promotionModel.PromotionName,
@@ -176,6 +200,7 @@ namespace GaraMS.Service.Services.PromotionService
                     ServiceId = sp.ServiceId,
                 }).ToList()
             };
+            
 
             var createResult = await _promoRepo.CreatePromotionAsync(promotion);
             if (!createResult)
@@ -186,9 +211,32 @@ namespace GaraMS.Service.Services.PromotionService
                 return resultModel;
             }
 
+            foreach (var servicePromotion in promotion.ServicePromotions)
+            {
+                var service = await _serviceRepo.GetServiceByIdAsync((int)servicePromotion.ServiceId);
+                if (service != null && service.TotalPrice.HasValue)
+                {
+                    decimal basePrice = service.TotalPrice.Value;
+                    var (_, discountAmount) = await _promoRepo.CalculateDiscountedPrice(
+                        (int)servicePromotion.ServiceId,
+                        basePrice
+                    );
+
+                    // Update only promotion amount
+                    await _serviceRepo.UpdateServicePromotionAsync(
+                        (int)servicePromotion.ServiceId,
+                        discountAmount
+                    );
+                }
+            }
+
             resultModel.Data = promotion;
             resultModel.Message = "Promotion created successfully";
             return resultModel;
+
+            // After creating promotion, update prices for all services
+       
+
         }
 
         public async Task<ResultModel> UpdatePromotionAsync(string? token, int id, UpdatePromotionModel promotionModel)
@@ -208,7 +256,7 @@ namespace GaraMS.Service.Services.PromotionService
             };
 
             var decodeModel = _token.decode(token);
-            var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 4 });
+            var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 3 });
             if (!isValidRole)
             {
                 resultModel.IsSuccess = false;
@@ -282,7 +330,7 @@ namespace GaraMS.Service.Services.PromotionService
             };
 
             var decodeModel = _token.decode(token);
-            var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 4 });
+            var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 3 });
             if (!isValidRole)
             {
                 resultModel.IsSuccess = false;
@@ -308,6 +356,16 @@ namespace GaraMS.Service.Services.PromotionService
                     resultModel.Code = (int)HttpStatusCode.NotFound;
                     resultModel.Message = "Promotion not found";
                     return resultModel;
+                }
+
+                // Reset prices for all services in this promotion before deleting
+                foreach (var servicePromotion in existingPromotion.ServicePromotions)
+                {
+                    await _serviceRepo.UpdateServicePriceAsync(
+                        (int)servicePromotion.ServiceId,
+                        totalPrice: null,    // Reset to null or you could set it back to ServicePrice
+                        promotion: null      // Reset promotion discount to null
+                    );
                 }
 
                 // Clear related ServicePromotion records first
@@ -354,6 +412,90 @@ namespace GaraMS.Service.Services.PromotionService
                     IsSuccess = false,
                     Code = 500,
                     Message = $"Error retrieving active promotions: {ex.Message}"
+                };
+            }
+        }
+
+        public async Task<ResultModel> CalculateServiceDiscountAsync(string? token, int serviceId, decimal originalPrice)
+        {
+            var resultModel = new ResultModel
+            {
+                IsSuccess = true,
+                Code = (int)HttpStatusCode.OK,
+                Data = null,
+                Message = null,
+            };
+            var res = new ResultModel
+            {
+                IsSuccess = false,
+                Code = (int)HttpStatusCode.Unauthorized,
+                Message = "Invalid token."
+            };
+
+            var decodeModel = _token.decode(token);
+            var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 3 });
+            if (!isValidRole)
+            {
+                resultModel.IsSuccess = false;
+                resultModel.Code = (int)HttpStatusCode.Forbidden;
+                resultModel.Message = "You don't have permission to perform this action.";
+                return resultModel;
+            }
+            if (!int.TryParse(decodeModel.userid, out int userId))
+            {
+                return res;
+            }
+            if (userId <= 0)
+            {
+                return res;
+            }
+
+            try
+            {
+                var service = await _serviceRepo.GetServiceByIdAsync(serviceId);
+                if (service == null)
+                {
+                    return new ResultModel
+                    {
+                        IsSuccess = false,
+                        Code = (int)HttpStatusCode.NotFound,
+                        Message = "Service not found"
+                    };
+                }
+
+                if (!service.TotalPrice.HasValue)
+                {
+                    return new ResultModel
+                    {
+                        IsSuccess = false,
+                        Code = (int)HttpStatusCode.BadRequest,
+                        Message = "Service base price not set"
+                    };
+                }
+                var (finalPrice, discountAmount) = await _promoRepo.CalculateDiscountedPrice(serviceId, (decimal)service.TotalPrice);
+
+                await _serviceRepo.UpdateServicePromotionAsync(
+                    serviceId,
+                    discountAmount    // This is now nullable
+                );
+
+                var priceDetails = new
+                {
+                    OriginalPrice = originalPrice,
+                    DiscountAmount = discountAmount,
+                    FinalPrice = originalPrice - discountAmount
+                };
+
+                resultModel.Data = priceDetails;
+                resultModel.Message = "Discount calculated successfully";
+                return resultModel;
+            }catch(Exception ex)
+            {
+                return new ResultModel
+                {
+                    IsSuccess = false,
+                    Code = (int)HttpStatusCode.InternalServerError,
+                    Message = $"Error calculating discount: {ex.Message}"
                 };
             }
         }

@@ -15,5 +15,7 @@ namespace GaraMS.Data.Repositories.ServiceRepo
 		Task<Service> CreateServiceAsync(ServiceModel model);
 		Task<Service> UpdateServiceAsync(int id, ServiceModel model);
 		Task<Service> RemoveServiceAsync(int id);
-	}
+        Task<bool> UpdateServicePriceAsync(int serviceId, decimal? totalPrice, decimal? promotion);
+		Task<bool> UpdateServicePromotionAsync(int serviceId, decimal? promotionAmount);
+    }
 }

@@ -16,5 +16,8 @@ namespace GaraMS.Data.Repositories.PromotionRepo
         Task<bool> UpdatePromotionAsync(int id, Promotion promotion);
         Task<bool> DeletePromotionAsync(int id);
         Task<List<Promotion>> GetActivePromotionsAsync();
+        Task<(decimal finalPrice, decimal discountAmount)> CalculateDiscountedPrice(int serviceId, decimal basePrice);
+        Task<List<Promotion>> GetPromotionsForService(int serviceId);
+        Task<bool> IsPromotionValidForService(int promotionId, int serviceId);
     }
 }

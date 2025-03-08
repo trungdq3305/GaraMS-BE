@@ -67,5 +67,45 @@ namespace GaraMS.Data.Repositories.ServiceRepo
 			await _context.SaveChangesAsync();
 			return service;
 		}
-	}
+
+        public async Task<bool> UpdateServicePriceAsync(int serviceId, decimal? totalPrice, decimal? promotion)
+        {
+            try
+            {
+                var service = await _context.Services.FindAsync(serviceId);
+                if (service == null) return false;
+
+                service.TotalPrice = totalPrice;
+                service.Promotion = promotion;
+                service.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateServicePromotionAsync(int serviceId, decimal? promotionAmount)
+        {
+            try
+            {
+                var service = await _context.Services.FindAsync(serviceId);
+                if (service == null) return false;
+
+                // Only update the promotion amount, keep totalPrice as base price
+                service.Promotion = promotionAmount;
+                service.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
 }
