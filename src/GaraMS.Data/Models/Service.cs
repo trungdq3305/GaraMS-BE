@@ -63,4 +63,22 @@ public partial class Service
 
     [InverseProperty("Service")]
     public virtual ICollection<WarrantyHistory> WarrantyHistories { get; set; } = new List<WarrantyHistory>();
+
+    public void UpdateTotalPrice()
+    {
+        // Calculate total price: ServicePrice + InventoryPrice - Promotion
+        decimal servicePrice = ServicePrice ?? 0;
+        decimal inventoryPrice = InventoryPrice ?? 0;
+        decimal promotion = Promotion ?? 0;
+
+        TotalPrice = servicePrice + inventoryPrice - promotion;
+    }
+
+    public void ApplyPromotionDiscount(decimal discountPercent)
+    {
+        decimal originalPrice = (ServicePrice ?? 0) + (InventoryPrice ?? 0);
+        Promotion = (originalPrice * discountPercent) / 100;
+        TotalPrice = originalPrice - Promotion;
+        UpdatedAt = DateTime.Now;
+    }
 }
