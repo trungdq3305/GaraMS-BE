@@ -18,9 +18,24 @@ namespace GaraMS.Data.Repository
 
         public async Task<List<Promotion>> GetAllPromotionsAsync()
         {
-            return await _context.Promotions
+            var promotions = await _context.Promotions
                 .Include(p => p.ServicePromotions)
+                    .ThenInclude(sp => sp.Service)
                 .ToListAsync();
+
+            foreach (var promotion in promotions)
+            {
+                foreach (var servicePromotion in promotion.ServicePromotions)
+                {
+                    if (servicePromotion.Service != null)
+                    {
+                        servicePromotion.Service.ApplyPromotionDiscount((decimal)promotion.DiscountPercent);
+                    }
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return promotions;
         }
 
         public async Task<Promotion> GetPromotionByIdAsync(int id)
@@ -30,18 +45,11 @@ namespace GaraMS.Data.Repository
                 .FirstOrDefaultAsync(p => p.PromotionId == id);
         }
 
-        public async Task<bool> CreatePromotionAsync(Promotion promotion)
+        public async Task<Promotion> CreatePromotionAsync(Promotion promotion)
         {
-            try
-            {
-                await _context.Promotions.AddAsync(promotion);
-                await _context.SaveChangesAsync();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            _context.Promotions.Add(promotion);
+            await _context.SaveChangesAsync();
+            return promotion;
         }
 
         public async Task<bool> UpdatePromotionAsync(int id, Promotion promotion)
@@ -68,19 +76,52 @@ namespace GaraMS.Data.Repository
             }
         }
 
-        public async Task<bool> DeletePromotionAsync(int id)
+        public async Task<bool> DeletePromotionAsync(int promotionId)
         {
             try
             {
-                var promotion = await GetPromotionByIdAsync(id);
-                if (promotion == null) return false;
-
+                // Find the promotion
+                var promotion = await _context.Promotions
+                    .Include(p => p.ServicePromotions)
+                    .FirstOrDefaultAsync(p => p.PromotionId == promotionId);
+                    
+                if (promotion == null)
+                    return false;
+                    
+                // Get all services associated with this promotion
+                var serviceIds = promotion.ServicePromotions.Select(sp => sp.ServiceId).ToList();
+                
+                // Reset the promotion amount and total price for each service
+                foreach (var serviceId in serviceIds)
+                {
+                    var service = await _context.Services.FindAsync(serviceId);
+                    if (service != null)
+                    {
+                        // Reset promotion to 0
+                        service.Promotion = 0;
+                        
+                        // Recalculate total price without promotion
+                        service.TotalPrice = (service.ServicePrice ?? 0) + (service.InventoryPrice ?? 0);
+                        service.UpdatedAt = DateTime.Now;
+                        
+                        _context.Entry(service).State = EntityState.Modified;
+                    }
+                }
+                
+                // Remove all service-promotion relationships
+                _context.ServicePromotions.RemoveRange(promotion.ServicePromotions);
+                
+                // Remove the promotion itself
                 _context.Promotions.Remove(promotion);
+                
+                // Save all changes
                 await _context.SaveChangesAsync();
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                // Log the exception
+                Console.WriteLine($"Error deleting promotion: {ex.Message}");
                 return false;
             }
         }
@@ -90,6 +131,7 @@ namespace GaraMS.Data.Repository
             var currentDate = DateTime.Now;
             return await _context.Promotions
                 .Include(p => p.ServicePromotions)
+                    .ThenInclude(sp => sp.Service)
                 .Where(p => p.StartDate <= currentDate && p.EndDate >= currentDate)
                 .ToListAsync();
         }
@@ -133,6 +175,119 @@ namespace GaraMS.Data.Repository
         {
             return await _context.ServicePromotions
                 .AnyAsync(sp => sp.PromotionId == promotionId && sp.ServiceId == serviceId);
+        }
+
+        public async Task<bool> ApplyPromotionToServiceAsync(int serviceId, decimal discountPercent)
+        {
+            try
+            {
+                var service = await _context.Services.FindAsync(serviceId);
+                if (service == null)
+                    return false;
+
+                decimal originalPrice = (service.ServicePrice ?? 0) + (service.InventoryPrice ?? 0);
+                service.Promotion = (originalPrice * discountPercent) / 100;
+                service.TotalPrice = originalPrice - service.Promotion;
+                service.UpdatedAt = DateTime.Now;
+
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> CreateServicePromotionAsync(int serviceId, int promotionId)
+        {
+            try
+            {
+                // Check if service exists
+                var service = await _context.Services.FindAsync(serviceId);
+                if (service == null)
+                    return false;
+                    
+                // Check if promotion exists
+                var promotion = await _context.Promotions.FindAsync(promotionId);
+                if (promotion == null)
+                    return false;
+                    
+                // Check if the relationship already exists
+                var existingRelation = await _context.ServicePromotions
+                    .FirstOrDefaultAsync(sp => sp.ServiceId == serviceId && sp.PromotionId == promotionId);
+                    
+                if (existingRelation == null)
+                {
+                    // Create new relationship
+                    var servicePromotion = new ServicePromotion
+                    {
+                        ServiceId = serviceId,
+                        PromotionId = promotionId
+                    };
+                    
+                    _context.ServicePromotions.Add(servicePromotion);
+                }
+                
+                // Calculate and apply the promotion
+                decimal originalPrice = (service.ServicePrice ?? 0) + (service.InventoryPrice ?? 0);
+                decimal discountAmount = (decimal)((originalPrice * promotion.DiscountPercent) / 100);
+                
+                // Update the service with the promotion amount
+                service.Promotion = discountAmount;
+                service.TotalPrice = originalPrice - discountAmount;
+                service.UpdatedAt = DateTime.Now;
+                
+                // Save all changes
+                await _context.SaveChangesAsync();
+                
+                // Verify the changes were saved
+                var updatedService = await _context.Services.FindAsync(serviceId);
+                if (updatedService.Promotion != discountAmount)
+                {
+                    // If changes weren't saved, try again with explicit update
+                    _context.Entry(service).State = EntityState.Modified;
+                    await _context.SaveChangesAsync();
+                }
+                
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                Console.WriteLine($"Error creating service promotion: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> RemoveServicePromotionAsync(int serviceId)
+        {
+            try
+            {
+                var service = await _context.Services.FindAsync(serviceId);
+                if (service == null)
+                    return false;
+
+                // Reset promotion and recalculate total price
+                service.Promotion = 0;
+                service.TotalPrice = (service.ServicePrice ?? 0) + (service.InventoryPrice ?? 0);
+                service.UpdatedAt = DateTime.Now;
+
+                // Remove the service-promotion relationship
+                var servicePromotion = await _context.ServicePromotions
+                    .FirstOrDefaultAsync(sp => sp.ServiceId == serviceId);
+                if (servicePromotion != null)
+                {
+                    _context.ServicePromotions.Remove(servicePromotion);
+                }
+
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 } 

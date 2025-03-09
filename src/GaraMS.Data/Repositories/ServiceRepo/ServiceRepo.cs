@@ -88,18 +88,38 @@ namespace GaraMS.Data.Repositories.ServiceRepo
             }
         }
 
-        public async Task<bool> UpdateServicePromotionAsync(int serviceId, decimal? promotionAmount)
+		public async Task<Service> UpdateServicePromotionAsync(int serviceId, decimal promotionAmount)
+		{
+				var service = await _context.Services.FindAsync(serviceId);
+				if (service == null)
+					return null;
+
+				service.Promotion = promotionAmount;
+				service.TotalPrice = (service.ServicePrice ?? 0) + (service.InventoryPrice ?? 0) - promotionAmount;
+				service.UpdatedAt = DateTime.Now;
+
+				await _context.SaveChangesAsync();
+				return service;  // Return the updated service object
+		}
+
+        public async Task<bool> UpdateServicePromotionDirectlyAsync(int serviceId, decimal discountPercent)
         {
             try
             {
                 var service = await _context.Services.FindAsync(serviceId);
-                if (service == null) return false;
+                if (service == null)
+                    return false;
 
-                // Only update the promotion amount, keep totalPrice as base price
-                service.Promotion = promotionAmount;
-                service.UpdatedAt = DateTime.UtcNow;
+                decimal originalPrice = (service.ServicePrice ?? 0) + (service.InventoryPrice ?? 0);
+                decimal discountAmount = (originalPrice * discountPercent) / 100;
 
+                service.Promotion = discountAmount;
+                service.TotalPrice = originalPrice - discountAmount;
+                service.UpdatedAt = DateTime.Now;
+
+                _context.Entry(service).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
+
                 return true;
             }
             catch
