@@ -1,4 +1,5 @@
-﻿using GaraMS.Data.ViewModels.CreateReqModel;
+﻿using GaraMS.Data.ViewModels.AutheticateModel;
+using GaraMS.Data.ViewModels.CreateReqModel;
 using GaraMS.Data.ViewModels.ResultModel;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,9 @@ namespace GaraMS.Service.Services.UserService
     {
         Task<ResultModel> GetLoggedInUser(string token);
         Task<ResultModel> CreateUser(string token, CreateUserModel model);
-        Task<ResultModel> ConfirmUserStatus(int userId);
+        Task<ResultModel> ConfirmUserStatus(string token, int userId);
+        Task<ResultModel> GetFalseUser(string token);
+        Task<ResultModel> ChangePassword(string token, ChangePasswordModel model);
+        Task<ResultModel> EditUser(string token, EditUserModel model);
     }
 }

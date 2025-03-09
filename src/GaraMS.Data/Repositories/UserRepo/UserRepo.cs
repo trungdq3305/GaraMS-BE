@@ -80,6 +80,11 @@ namespace GaraMS.Data.Repositories.UserRepo
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<User> GetFalseUser()
+        {
+            return await _context.Users.FirstOrDefaultAsync(u => u.Status == false);
+        }
     } 
 
 }

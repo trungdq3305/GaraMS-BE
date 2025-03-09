@@ -2,46 +2,65 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace GaraMS.Data.Models;
 
 public partial class Service
 {
+    [Key]
     public int ServiceId { get; set; }
 
+    [Required]
+    [StringLength(100)]
     public string ServiceName { get; set; }
 
     public string Description { get; set; }
 
+    [Column(TypeName = "decimal(18, 2)")]
     public decimal? ServicePrice { get; set; }
 
+    [Column(TypeName = "decimal(18, 2)")]
     public decimal? InventoryPrice { get; set; }
 
+    [Column(TypeName = "decimal(18, 2)")]
     public decimal? Promotion { get; set; }
 
+    [Column(TypeName = "decimal(18, 2)")]
     public decimal? TotalPrice { get; set; }
 
     public int? EstimatedTime { get; set; }
 
     public bool? Status { get; set; }
 
+    [Column(TypeName = "datetime")]
     public DateTime? CreatedAt { get; set; }
 
+    [Column(TypeName = "datetime")]
     public DateTime? UpdatedAt { get; set; }
 
     public int? WarrantyPeriod { get; set; }
 
     public int? CategoryId { get; set; }
 
+    [InverseProperty("Service")]
     public virtual ICollection<AppointmentService> AppointmentServices { get; set; } = new List<AppointmentService>();
 
+    [ForeignKey("CategoryId")]
+    [InverseProperty("Services")]
     public virtual Category Category { get; set; }
 
+    [InverseProperty("Service")]
     public virtual ICollection<ServiceEmployee> ServiceEmployees { get; set; } = new List<ServiceEmployee>();
 
+    [InverseProperty("Service")]
     public virtual ICollection<ServiceInventory> ServiceInventories { get; set; } = new List<ServiceInventory>();
 
+    [InverseProperty("Service")]
     public virtual ICollection<ServicePromotion> ServicePromotions { get; set; } = new List<ServicePromotion>();
 
+    [InverseProperty("Service")]
     public virtual ICollection<WarrantyHistory> WarrantyHistories { get; set; } = new List<WarrantyHistory>();
 }

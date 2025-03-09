@@ -2,15 +2,22 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace GaraMS.Data.Models;
 
+[Table("WarrantyHistory")]
 public partial class WarrantyHistory
 {
+    [Key]
     public int WarrantyHistoryId { get; set; }
 
+    [Column(TypeName = "datetime")]
     public DateTime? StartDay { get; set; }
 
+    [Column(TypeName = "datetime")]
     public DateTime? EndDay { get; set; }
 
     public string Note { get; set; }
@@ -19,5 +26,7 @@ public partial class WarrantyHistory
 
     public int? ServiceId { get; set; }
 
+    [ForeignKey("ServiceId")]
+    [InverseProperty("WarrantyHistories")]
     public virtual Service Service { get; set; }
 }

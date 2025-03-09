@@ -17,6 +17,14 @@ namespace GaraMS.Data.Repositories.VehicleRepo
         {
             _context = context;
         }
+
+        public async Task<Vehicle> createVehicle(Vehicle vehicle)
+        {
+            await _context.Vehicles.AddAsync(vehicle);
+            await _context.SaveChangesAsync();
+            return vehicle;
+        }
+
         public async Task<Vehicle> GetVehicleByUserId(int id)
         {
             return await _context.Vehicles.FirstOrDefaultAsync(v => v.CustomerId == id);
@@ -30,6 +38,23 @@ namespace GaraMS.Data.Repositories.VehicleRepo
                             (string.IsNullOrEmpty(vehicleSearch.Brand) || v.Brand.Contains(vehicleSearch.Brand)) &&
                             (string.IsNullOrEmpty(vehicleSearch.Model) || v.Model.Contains(vehicleSearch.Model)))
                 .FirstOrDefaultAsync();
+        }
+
+        public async Task<Vehicle> updateVehicle(EditVehicle vehicle)
+        {
+            var existingVehicle = await _context.Vehicles.FirstOrDefaultAsync(v => v.VehicleId == vehicle.VehicleId);
+            if (existingVehicle == null)
+            {
+                throw new KeyNotFoundException("Vehicle not found");
+            }
+
+            existingVehicle.Brand = vehicle.Brand;
+            existingVehicle.Model = vehicle.Model;
+
+            _context.Vehicles.Update(existingVehicle);
+            await _context.SaveChangesAsync();
+
+            return existingVehicle;
         }
     }
 }

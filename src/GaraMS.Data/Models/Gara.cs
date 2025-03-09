@@ -2,16 +2,26 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace GaraMS.Data.Models;
 
+[Table("Gara")]
+[Index("GaraNumber", Name = "UQ__Gara__8CEDF0470C826552", IsUnique = true)]
 public partial class Gara
 {
+    [Key]
     public int GaraId { get; set; }
 
+    [Required]
+    [StringLength(50)]
     public string GaraNumber { get; set; }
 
     public int? UserId { get; set; }
 
+    [ForeignKey("UserId")]
+    [InverseProperty("Garas")]
     public virtual User User { get; set; }
 }

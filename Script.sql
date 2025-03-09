@@ -1,4 +1,4 @@
--- Create Database
+﻿-- Create Database
 CREATE DATABASE GaraManagementSystem
 GO
 
@@ -37,6 +37,16 @@ CREATE TABLE Manager (
     Salary DECIMAL(18,2),
     UserId INT FOREIGN KEY REFERENCES Users(UserId)
 );
+CREATE TABLE Specialized (
+    SpecializedId INT IDENTITY(1,1) PRIMARY KEY,
+    SpecializedName NVARCHAR(100) NOT NULL
+);
+CREATE TABLE Employees (
+    EmployeeId INT IDENTITY(1,1) PRIMARY KEY,
+    Salary DECIMAL(18,2),
+    SpecializedId INT FOREIGN KEY REFERENCES Specialized(SpecializedId),
+    UserId INT FOREIGN KEY REFERENCES Users(UserId)
+);
 
 CREATE TABLE Customers (
     CustomerId INT IDENTITY(1,1) PRIMARY KEY,
@@ -65,15 +75,7 @@ CREATE TABLE Feedbacks (
     CreatedAt DATETIME DEFAULT GETDATE()
 );
 
-CREATE TABLE Invoices (
-    InvoiceId INT IDENTITY(1,1) PRIMARY KEY,
-    CustomerId INT FOREIGN KEY REFERENCES Customers(CustomerId),
-    Date DATETIME DEFAULT GETDATE(),
-    PaymentMethod NVARCHAR(50),
-    TotalAmount DECIMAL(18,2),
-    Status NVARCHAR(50),
-    FeedbackId INT FOREIGN KEY REFERENCES Feedbacks(FeedbackId)
-);
+
 
 CREATE TABLE Appointments (
     AppointmentId INT IDENTITY(1,1) PRIMARY KEY,
@@ -86,13 +88,15 @@ CREATE TABLE Appointments (
     RejectReason NVARCHAR(MAX),
     VehicleId INT FOREIGN KEY REFERENCES Vehicles(VehicleId),
     AppointmentStatusId INT FOREIGN KEY REFERENCES AppointmentStatus(AppointmentStatusId),
-    InvoiceId INT FOREIGN KEY REFERENCES Invoices(InvoiceId)
 );
-
-CREATE TABLE InvoiceDetail (
-    InvoiceDetailId INT IDENTITY(1,1) PRIMARY KEY,
-    Price DECIMAL(18,2),
-    InvoiceId INT FOREIGN KEY REFERENCES Invoices(InvoiceId)
+CREATE TABLE Invoices (
+    InvoiceId INT IDENTITY(1,1) PRIMARY KEY,
+    AppointmentId INT UNIQUE FOREIGN KEY REFERENCES Appointments(AppointmentId),
+    CustomerId INT FOREIGN KEY REFERENCES Customers(CustomerId),
+    Date DATETIME DEFAULT GETDATE(),
+    PaymentMethod NVARCHAR(50),
+    TotalAmount DECIMAL(18,2) DEFAULT 0,
+    Status NVARCHAR(50) CHECK (Status IN ('Unpaid', 'Paid', 'Cancelled'))
 );
 
 CREATE TABLE Reports (
@@ -132,7 +136,8 @@ CREATE TABLE Services (
 CREATE TABLE AppointmentService (
     AppointmentServiceId INT IDENTITY(1,1) PRIMARY KEY,
     ServiceId INT FOREIGN KEY REFERENCES Services(ServiceId),
-    AppointmentId INT FOREIGN KEY REFERENCES Appointments(AppointmentId)
+    AppointmentId INT FOREIGN KEY REFERENCES Appointments(AppointmentId),
+	EmployeeId INT FOREIGN KEY REFERENCES Employees(EmployeeId)
 );
 
 CREATE TABLE WarrantyHistory (
@@ -144,17 +149,6 @@ CREATE TABLE WarrantyHistory (
     ServiceId INT FOREIGN KEY REFERENCES Services(ServiceId)
 );
 
-CREATE TABLE Specialized (
-    SpecializedId INT IDENTITY(1,1) PRIMARY KEY,
-    SpecializedName NVARCHAR(100) NOT NULL
-);
-
-CREATE TABLE Employees (
-    EmployeeId INT IDENTITY(1,1) PRIMARY KEY,
-    Salary DECIMAL(18,2),
-    SpecializedId INT FOREIGN KEY REFERENCES Specialized(SpecializedId),
-    UserId INT FOREIGN KEY REFERENCES Users(UserId)
-);
 
 CREATE TABLE ServiceEmployee (
     ServiceEmployeeId INT IDENTITY(1,1) PRIMARY KEY,
@@ -219,4 +213,48 @@ INSERT INTO UserRoles (RoleId, RoleName) VALUES
 
 SET IDENTITY_INSERT UserRoles OFF;
 GO
+CREATE TRIGGER trg_CreateInvoiceOnAppointmentAccepted
+ON Appointments
+AFTER UPDATE
+AS
+BEGIN
+    DECLARE @AppointmentId INT;
+    DECLARE @CustomerId INT;
+    DECLARE @InvoiceId INT;
+    DECLARE @TotalAmount DECIMAL(18,2);
+
+    SELECT @AppointmentId = inserted.AppointmentId
+    FROM inserted
+    JOIN deleted ON inserted.AppointmentId = deleted.AppointmentId
+    WHERE inserted.Status = 'Accepted' AND deleted.Status <> 'Accepted';
+    IF @AppointmentId IS NOT NULL
+    BEGIN
+
+        SELECT @CustomerId = c.CustomerId
+        FROM Appointments a
+        JOIN Vehicles v ON a.VehicleId = v.VehicleId
+        JOIN Customers c ON v.CustomerId = c.CustomerId
+        WHERE a.AppointmentId = @AppointmentId;
+
+        INSERT INTO Invoices (AppointmentId, CustomerId, PaymentMethod, TotalAmount, Status)
+        VALUES (@AppointmentId, @CustomerId, 'Cash', 0, 'Unpaid');
+
+
+        SET @InvoiceId = SCOPE_IDENTITY();
+        SELECT @TotalAmount = COALESCE(SUM(s.TotalPrice), 0)
+        FROM AppointmentService aps
+        JOIN Services s ON aps.ServiceId = s.ServiceId
+        WHERE aps.AppointmentId = @AppointmentId;
+
+        UPDATE Invoices
+        SET TotalAmount = @TotalAmount
+        WHERE InvoiceId = @InvoiceId;
+
+        PRINT 'Hóa đơn đã được tạo và cập nhật tổng tiền!';
+    END;
+END;
+GO
+
+
+
 

@@ -1,13 +1,16 @@
 ﻿using GaraMS.Data.Models;
 using GaraMS.Data.Repositories.UserRepo;
+using GaraMS.Data.ViewModels.AutheticateModel;
 using GaraMS.Data.ViewModels.CreateReqModel;
 using GaraMS.Data.ViewModels.ResultModel;
 using GaraMS.Service.Services.AccountService;
 using GaraMS.Service.Services.AutheticateService;
 using GaraMS.Service.Services.Email;
+using GaraMS.Service.Services.HashPass;
 using GaraMS.Service.Services.TokenService;
 using GaraMS.Service.Services.Validate;
 using Microsoft.Extensions.Configuration;
+using RTools_NTS.Util;
 using System.Net;
 
 namespace GaraMS.Service.Services.UserService
@@ -163,7 +166,7 @@ namespace GaraMS.Service.Services.UserService
                 Employee newEmployee = new Employee
                 {
                     Salary = 0,
-                    SpecializedId = null 
+                    SpecializedId = null
                 };
 
                 await _userRepo.AddEmployeeAsync(newEmployee);
@@ -233,28 +236,45 @@ namespace GaraMS.Service.Services.UserService
         }
         private async Task SendStatusChangeEmail(User user)
         {
-            var confirmationLink = $"https://localhost:5001/api/User/confirm?userId={user.UserId}";
-            var subject = "Status Change Request";
+            var subject = "Wait for admin Accept Request";
             var body = $@"
-        <html>
-        <head></head>
-        <body>
-            <h2>Status Change Request</h2>
-            <p>Please click the button below to change the status. This link can only be used once.</p>
-            <p><strong>Hello {user.FullName},</strong></p>
-            <p>Please confirm your account by clicking the button below:</p>
-            <a href='{confirmationLink}' style='display: inline-block; padding: 10px 20px; font-size: 16px; color: white; background-color: #4CAF50; text-decoration: none; border-radius: 5px;'>
-                Confirm Account
-            </a>
-        </body>
-        </html>";
+<html>
+<head></head>
+<body>
+    <h2>Status Change Request</h2>
+    <p><strong>Hello {user.FullName},</strong></p>
+    <p>Wait for admin accept request</p>
+    <p>
+    </p>
+</body>
+</html>";
 
             await _emailService.SendEmailAsync(user.Email, subject, body);
         }
 
 
-        public async Task<ResultModel> ConfirmUserStatus(int userId)
+
+
+        public async Task<ResultModel> ConfirmUserStatus(string token,int userId)
         {
+            var res = new ResultModel
+            {
+                IsSuccess = true,
+                Code = (int)HttpStatusCode.OK,
+                Data = null,
+                Message = null,
+            };
+
+            var decodeModel = _token.decode(token);
+            var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 3, 4 });
+            if (!isValidRole)
+            {
+                res.IsSuccess = false;
+                res.Code = (int)HttpStatusCode.Forbidden;
+                res.Message = "You don't have permission to perform this action.";
+                return res;
+            }
+
             var user = await _userRepo.GetLoginAsync(userId);
             if (user == null)
             {
@@ -285,6 +305,137 @@ namespace GaraMS.Service.Services.UserService
                 Code = 200,
                 Message = "Account confirmed successfully!"
             };
+        }
+
+        public async Task<ResultModel> GetFalseUser(string token)
+        {
+            var res = new ResultModel
+            {
+                IsSuccess = true,
+                Code = (int)HttpStatusCode.OK,
+                Data = null,
+                Message = null,
+            };
+
+            var decodeModel = _token.decode(token);
+            var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 3, 4 });
+            if (!isValidRole)
+            {
+                res.IsSuccess = false;
+                res.Code = (int)HttpStatusCode.Forbidden;
+                res.Message = "You don't have permission to perform this action.";
+                return res;
+            }
+
+            var falseUser = await _userRepo.GetFalseUser();
+            if (falseUser == null)
+            {
+                res.IsSuccess = false;
+                res.Code = (int)HttpStatusCode.NotFound;
+                res.Message = "No false user found.";
+                return res;
+            }
+
+            res.Data = falseUser;
+            res.Message = "False user retrieved successfully.";
+            return res;
+        }
+        public async Task<ResultModel> ChangePassword(string token, ChangePasswordModel model)
+        {
+            var res = new ResultModel
+            {
+                IsSuccess = true,
+                Code = (int)HttpStatusCode.OK,
+                Data = null,
+                Message = null,
+            };
+
+            var decodeModel = _token.decode(token);
+
+            var existingUser = await _userRepo.GetLoginAsync(int.Parse(decodeModel.userid));
+            bool isMatch = HashPass.HashPass.VerifyPassword(model.OldPassword, existingUser.Password);
+            if (!isMatch)
+            {
+                res.IsSuccess = false;
+                res.Code = 400;
+                res.Message = "Old password is wrong";
+                return res;
+            }
+            try
+            {
+
+                string hashNewPassword = HashPass.HashPass.HashPassword(model.NewPassword);
+                existingUser.Password = hashNewPassword;
+                await _userRepo.UpdateAsync(existingUser);
+
+                res.IsSuccess = true;
+                res.Code = 200;
+                res.Message = "Change password succesfully";
+                return res;
+            }
+            catch (Exception e)
+            {
+                res.IsSuccess = false;
+                res.Code = 400;
+                return res;
+            }
+
+
+
+        }
+
+        public async Task<ResultModel> EditUser(string token, EditUserModel model)
+        {
+            var res = new ResultModel
+            {
+                IsSuccess = false,
+                Code = (int)HttpStatusCode.BadRequest,
+                Message = "Invalid request."
+            };
+
+            if (string.IsNullOrEmpty(token))
+            {
+                res.Message = "Token is required.";
+                return res;
+            }
+
+            var decodeModel = _token.decode(token);
+            if (decodeModel == null)
+            {
+                res.Code = (int)HttpStatusCode.Unauthorized;
+                res.Message = "Invalid token.";
+                return res;
+            }
+
+            var user = await _userRepo.GetLoginAsync(int.Parse(decodeModel.userid));
+            if (user == null)
+            {
+                res.Code = (int)HttpStatusCode.NotFound;
+                res.Message = "User not found.";
+                return res;
+            }
+
+            user.UserName = model.UserName ?? user.UserName;
+            user.Email = model.Email ?? user.Email;
+            user.FullName = model.FullName ?? user.FullName;
+            user.Address = model.Address ?? user.Address;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _userRepo.UpdateAsync(user);
+
+            res.IsSuccess = true;
+            res.Code = (int)HttpStatusCode.OK;
+            res.Message = "User updated successfully.";
+            res.Data = new
+            {
+                user.UserName,
+                user.Email,
+                user.FullName,
+                user.Address,
+                user.UpdatedAt
+            };
+
+            return res;
         }
     }
 }

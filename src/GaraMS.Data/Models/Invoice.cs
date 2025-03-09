@@ -2,30 +2,39 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace GaraMS.Data.Models;
 
+[Index("AppointmentId", Name = "UQ__Invoices__8ECDFCC30ACE1031", IsUnique = true)]
 public partial class Invoice
 {
+    [Key]
     public int InvoiceId { get; set; }
+
+    public int? AppointmentId { get; set; }
 
     public int? CustomerId { get; set; }
 
+    [Column(TypeName = "datetime")]
     public DateTime? Date { get; set; }
 
+    [StringLength(50)]
     public string PaymentMethod { get; set; }
 
+    [Column(TypeName = "decimal(18, 2)")]
     public decimal? TotalAmount { get; set; }
 
+    [StringLength(50)]
     public string Status { get; set; }
 
-    public int? FeedbackId { get; set; }
+    [ForeignKey("AppointmentId")]
+    [InverseProperty("Invoice")]
+    public virtual Appointment Appointment { get; set; }
 
-    public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
-
+    [ForeignKey("CustomerId")]
+    [InverseProperty("Invoices")]
     public virtual Customer Customer { get; set; }
-
-    public virtual Feedback Feedback { get; set; }
-
-    public virtual ICollection<InvoiceDetail> InvoiceDetails { get; set; } = new List<InvoiceDetail>();
 }

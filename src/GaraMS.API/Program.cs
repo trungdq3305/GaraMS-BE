@@ -68,6 +68,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateLifetime = true,
         };
     });
+builder.Services.AddHttpClient();
 
 builder.Services.AddSwaggerGen(options =>
 {

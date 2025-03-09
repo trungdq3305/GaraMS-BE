@@ -28,6 +28,94 @@ namespace GaraMS.Service.Services.VehicleService
             _authentocateService = authenticateService;
         }
 
+        public async Task<ResultModel> CreateVehicle(string? token, Vehicle vehicle)
+        {
+            var resultModel = new ResultModel
+            {
+                IsSuccess = true,
+                Code = (int)HttpStatusCode.OK,
+                Data = null,
+                Message = null,
+            };
+            var res = new ResultModel
+            {
+                IsSuccess = false,
+                Code = (int)HttpStatusCode.Unauthorized,
+                Message = "Invalid token."
+            };
+
+            var decodeModel = _token.decode(token);
+            var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 1 });
+            if (!isValidRole)
+            {
+                resultModel.IsSuccess = false;
+                resultModel.Code = (int)HttpStatusCode.Forbidden;
+                resultModel.Message = "You don't have permission to perform this action.";
+
+                return resultModel;
+            }
+
+            var createdVehicle = await _vehicleRepo.createVehicle(vehicle);
+            if (createdVehicle == null)
+            {
+                resultModel.IsSuccess = false;
+                resultModel.Code = (int)HttpStatusCode.InternalServerError;
+                resultModel.Message = "Vehicle creation failed.";
+                return resultModel;
+            }
+
+            resultModel.Data = createdVehicle;
+            resultModel.Message = "Vehicle created successfully.";
+            return resultModel;
+        }
+
+        public async Task<ResultModel> EditVehicle(string? token, Vehicle vehicle)
+        {
+            var resultModel = new ResultModel
+            {
+                IsSuccess = true,
+                Code = (int)HttpStatusCode.OK,
+                Data = null,
+                Message = null,
+            };
+            var res = new ResultModel
+            {
+                IsSuccess = false,
+                Code = (int)HttpStatusCode.Unauthorized,
+                Message = "Invalid token."
+            };
+
+            var decodeModel = _token.decode(token);
+            var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 1 });
+            if (!isValidRole)
+            {
+                resultModel.IsSuccess = false;
+                resultModel.Code = (int)HttpStatusCode.Forbidden;
+                resultModel.Message = "You don't have permission to perform this action.";
+
+                return resultModel;
+            }
+
+            var updatedVehicle = await _vehicleRepo.updateVehicle(new EditVehicle
+            {
+                PlateNumber = vehicle.PlateNumber,
+                Brand = vehicle.Brand,
+                Model = vehicle.Model
+            });
+
+            if (updatedVehicle == null)
+            {
+                resultModel.IsSuccess = false;
+                resultModel.Code = (int)HttpStatusCode.InternalServerError;
+                resultModel.Message = "Vehicle update failed.";
+                return resultModel;
+            }
+
+            resultModel.Data = updatedVehicle;
+            resultModel.Message = "Vehicle updated successfully.";
+            return resultModel;
+        }
+
         public async Task<ResultModel> ViewListVehicle(string? token, VehicleSearch vehicleSearch)
         {
             var resultModel = new ResultModel

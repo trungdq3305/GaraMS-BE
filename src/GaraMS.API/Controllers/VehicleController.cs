@@ -24,12 +24,21 @@ namespace GaraMS.API.Controllers
             var res = await _vehicleService.ViewListVehicle(token, vehicleSearch);
             return StatusCode(res.Code, res);
         }
+
         [HttpGet("ViewVehiclebyLogin")]
         public async Task<ActionResult> ViewVehiclebyLogin([FromQuery] Vehicle vehicle)
         {
             string? token = Request.Headers["Authorization"].ToString().Split(" ")[1];
             var res = await _vehicleService.ViewListVehicleByLogin(token, vehicle);
             return StatusCode(res.Code, res);
-        }   
+        }
+
+        [HttpPost("CreateVehicle")]
+        public async Task<ActionResult> CreateVehicle([FromBody] Vehicle vehicle)
+        {
+            string? token = Request.Headers["Authorization"].ToString().Split(" ")[1];
+            var res = await _vehicleService.CreateVehicle(token, vehicle);
+            return StatusCode(res.Code, res);
+        }
     }
 }
