@@ -13,4 +13,10 @@ namespace GaraMS.Data.ViewModels
 		public decimal? Price { get; set; }
 		public string Description { get; set; }
 	}
+
+	public class AssignInventoryToServiceModel
+	{
+		public int InventoryId { get; set; }
+		public int ServiceId { get; set; }
+	}
 }

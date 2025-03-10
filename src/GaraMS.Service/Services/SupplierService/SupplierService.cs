@@ -18,6 +18,18 @@ namespace GaraMS.Service.Services.SupplierService
 		{
 			_supplierRepo = supplierRepo;
 		}
+
+		public async Task<ResultModel> AssignInventoryToSupplierAsync(InventorySupplierModel model)
+		{
+			var isAssigned = await _supplierRepo.AssignInventoryToSupplierAsync(model.InventoryId, model.SupplierId);
+
+			return new ResultModel
+			{
+				IsSuccess = isAssigned,
+				Message = isAssigned ? "Assigned successfully" : "Failed to assign"
+			};
+		}
+
 		public async Task<ResultModel> CreateSupplierAsync(string token, SupplierModel supplierModel)
 		{
 			var supplier = await _supplierRepo.CreateSupplierAsync(supplierModel);
@@ -34,6 +46,16 @@ namespace GaraMS.Service.Services.SupplierService
 				return new ResultModel { IsSuccess = false, Code = 400, Message = "Failed to delete supplier" };
 
 			return new ResultModel { IsSuccess = true, Code = 200, Message = "Supplier deleted successfully" };
+		}
+
+		public async Task<ResultModel> GetAllInventorySuppliersAsync()
+		{
+			var result = await _supplierRepo.GetAllInventorySuppliersAsync();
+			return new ResultModel
+			{
+				IsSuccess = true,
+				Data = result
+			};
 		}
 
 		public async Task<ResultModel> GetAllSupplierAsync()

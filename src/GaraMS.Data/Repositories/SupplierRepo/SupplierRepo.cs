@@ -17,6 +17,26 @@ namespace GaraMS.Data.Repositories.SupplierRepo
 		{
 			_context = context;
 		}
+
+		public async Task<bool> AssignInventoryToSupplierAsync(int inventoryId, int supplierId)
+		{
+			var inventorySupplier = await _context.InventorySuppliers
+				.FirstOrDefaultAsync(isup => isup.InventoryId == inventoryId && isup.SupplierId == supplierId);
+
+			if (inventorySupplier != null)
+				return true;
+
+			var newInventorySupplier = new InventorySupplier
+			{
+				InventoryId = inventoryId,
+				SupplierId = supplierId
+			};
+
+			_context.InventorySuppliers.Add(newInventorySupplier);
+			await _context.SaveChangesAsync();
+			return true;
+		}
+
 		public async Task<Supplier> CreateSupplierAsync(SupplierModel supplierModel)
 		{
 			var supplier = new Supplier
@@ -39,6 +59,11 @@ namespace GaraMS.Data.Repositories.SupplierRepo
 			_context.Suppliers.Remove(supplier);
 			await _context.SaveChangesAsync();
 			return supplier;
+		}
+
+		public async Task<List<InventorySupplier>> GetAllInventorySuppliersAsync()
+		{
+			return await _context.InventorySuppliers.ToListAsync();
 		}
 
 		public async Task<List<Supplier>> GetAllSupplierAsync()

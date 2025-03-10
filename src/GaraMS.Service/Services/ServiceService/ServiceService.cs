@@ -170,5 +170,26 @@ namespace GaraMS.Service.Services.ServiceService
 				};
 			}
 		}
-    }
+
+		public async Task<ResultModel> GetAllServiceInventoriesAsync()
+		{
+			var result = await _serviceRepo.GetAllServiceInventoriesAsync();
+			return new ResultModel
+			{
+				IsSuccess = true,
+				Data = result
+			};
+		}
+
+		public async Task<ResultModel> AssignInventoryToServiceAsync(AssignInventoryToServiceModel model)
+		{
+			var isAssigned = await _serviceRepo.AssignInventoryToServiceAsync(model.InventoryId, model.ServiceId);
+
+			return new ResultModel
+			{
+				IsSuccess = isAssigned,
+				Message = isAssigned ? "Assigned successfully" : "Failed to assign"
+			};
+		}
+	}
 }

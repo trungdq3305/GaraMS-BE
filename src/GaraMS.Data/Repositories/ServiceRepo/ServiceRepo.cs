@@ -18,6 +18,25 @@ namespace GaraMS.Data.Repositories.ServiceRepo
 			_context = context;
 		}
 
+		public async Task<bool> AssignInventoryToServiceAsync(int inventoryId, int serviceId)
+		{
+			var serviceInventory = await _context.ServiceInventories
+				.FirstOrDefaultAsync(si => si.InventoryId == inventoryId && si.ServiceId == serviceId);
+
+			if (serviceInventory != null)
+				return true;
+
+			var newServiceInventory = new ServiceInventory
+			{
+				InventoryId = inventoryId,
+				ServiceId = serviceId
+			};
+
+			_context.ServiceInventories.Add(newServiceInventory);
+			await _context.SaveChangesAsync();
+			return true;
+		}
+
 		public async Task<Service> CreateServiceAsync(ServiceModel model)
 		{
 			var service = new Service
@@ -40,6 +59,11 @@ namespace GaraMS.Data.Repositories.ServiceRepo
 				.Include(c => c.ServiceInventories).ThenInclude(b => b.Inventory)
                 .Include(c => c.ServicePromotions).ThenInclude(b => b.Promotion).
 				ToListAsync();
+		}
+
+		public async Task<List<ServiceInventory>> GetAllServiceInventoriesAsync()
+		{
+			return await _context.ServiceInventories.ToListAsync();
 		}
 
 		public async Task<Service> GetServiceByIdAsync(int id)

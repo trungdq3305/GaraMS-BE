@@ -18,5 +18,8 @@ namespace GaraMS.Data.Repositories.ServiceRepo
         Task<bool> UpdateServicePriceAsync(int serviceId, decimal? totalPrice, decimal? promotion);
 		Task<Service> UpdateServicePromotionAsync(int serviceId, decimal promotionAmount);
 		Task<bool> UpdateServicePromotionDirectlyAsync(int serviceId, decimal discountPercent);
-    }
+
+		Task<List<ServiceInventory>> GetAllServiceInventoriesAsync();
+		Task<bool> AssignInventoryToServiceAsync(int inventoryId, int serviceId);
+	}
 }
