@@ -85,6 +85,13 @@ namespace GaraMS.Data.Repositories.UserRepo
         {
             return await _context.Users.FirstOrDefaultAsync(u => u.Status == false);
         }
+        public async Task<int> GetCustomerIdByUserIdAsync(int userId)
+        {
+            var customer = await _context.Customers
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+            return customer.CustomerId;
+        }
     } 
 
 }

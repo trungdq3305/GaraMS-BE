@@ -1,4 +1,5 @@
 ﻿using GaraMS.Data.Models;
+using GaraMS.Data.Repositories.UserRepo;
 using GaraMS.Data.Repositories.VehicleRepo;
 using GaraMS.Data.ViewModels.ResultModel;
 using GaraMS.Data.ViewModels.VehicleModel;
@@ -20,12 +21,14 @@ namespace GaraMS.Service.Services.VehicleService
         private readonly IAccountService _accountService;
         private readonly IAuthenticateService _authentocateService;
         private readonly ITokenService _token;
-        public VehicleService(IVehicleRepo vehicleRepo, IAuthenticateService authenticateService, IAccountService accountService, ITokenService tokenService)
+        private readonly IUserRepo _userRepo;
+        public VehicleService(IVehicleRepo vehicleRepo, IAuthenticateService authenticateService, IAccountService accountService, ITokenService tokenService, IUserRepo userRepo)
         {
             _vehicleRepo = vehicleRepo;
             _token = tokenService;
             _accountService = accountService;
             _authentocateService = authenticateService;
+            _userRepo = userRepo;
         }
 
         public async Task<ResultModel> CreateVehicle(string? token, CreateVehicle vehicle)
@@ -190,7 +193,15 @@ namespace GaraMS.Service.Services.VehicleService
             {
                 return res;
             }
-            var vehicleList = await _vehicleRepo.GetVehicleByUserId(userId);
+            var customerId = await _userRepo.GetCustomerIdByUserIdAsync(userId);
+            if (customerId == null || customerId <= 0)
+            {
+                resultModel.IsSuccess = false;
+                resultModel.Code = (int)HttpStatusCode.NotFound;
+                resultModel.Message = "Customer not found.";
+                return resultModel;
+            }
+            var vehicleList = await _vehicleRepo.GetVehicleByUserId(customerId);
             if (vehicleList == null)
             {
                 resultModel.IsSuccess = false;

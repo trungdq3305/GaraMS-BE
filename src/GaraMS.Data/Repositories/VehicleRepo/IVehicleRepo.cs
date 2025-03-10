@@ -10,7 +10,7 @@ namespace GaraMS.Data.Repositories.VehicleRepo
 {
     public interface IVehicleRepo
     {
-        Task<Vehicle> GetVehicleByUserId(int id);
+        public Task<List<Vehicle>> GetVehicleByUserId(int id);
         Task<Vehicle> searchVehicle(VehicleSearch vehicleSearch);
         Task<Vehicle> createVehicle(CreateVehicle vehicle);
         Task<Vehicle> updateVehicle(EditVehicle vehicle);

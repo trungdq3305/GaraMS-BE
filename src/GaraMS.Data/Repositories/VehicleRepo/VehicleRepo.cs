@@ -32,9 +32,9 @@ namespace GaraMS.Data.Repositories.VehicleRepo
             return newVehicle;
         }
 
-        public async Task<Vehicle> GetVehicleByUserId(int id)
+        public async Task<List<Vehicle>> GetVehicleByUserId(int id)
         {
-            return await _context.Vehicles.FirstOrDefaultAsync(v => v.CustomerId == id);
+            return await _context.Vehicles.Where(v => v.CustomerId == id).ToListAsync();
         }
 
         public async Task<Vehicle> searchVehicle(VehicleSearch vehicleSearch)
