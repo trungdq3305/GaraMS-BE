@@ -209,7 +209,7 @@ namespace GaraMS.Service.Services.DashboardService
                     query = query.Where(i => i.Date <= endDate);
 
                 var totalRevenue = await query
-                   .Where(i => i.TotalAmount.HasValue && i.Status == "1")  // Only include invoices with status "1"
+                   .Where(i => i.TotalAmount.HasValue && i.Status == "Paid")  // Only include invoices with status "1"
                    .SumAsync(i => i.TotalAmount ?? 0m);
 
                 return new ResultModel
