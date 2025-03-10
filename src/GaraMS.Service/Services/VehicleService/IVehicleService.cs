@@ -13,7 +13,7 @@ namespace GaraMS.Service.Services.VehicleService
     {
         public Task<ResultModel> ViewListVehicleByLogin(string? token, Vehicle vehicle);
         public Task<ResultModel> ViewListVehicle(string? token, VehicleSearch vehicleSearch);
-        public Task<ResultModel> CreateVehicle(string? token, Vehicle vehicle);
-        public Task<ResultModel> EditVehicle(string? token, Vehicle vehicle);
+        public Task<ResultModel> CreateVehicle(string? token, CreateVehicle vehicle);
+        public Task<ResultModel> EditVehicle(string? token, EditVehicle vehicle);
     }
 }

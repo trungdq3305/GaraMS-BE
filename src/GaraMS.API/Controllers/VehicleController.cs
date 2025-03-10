@@ -34,11 +34,19 @@ namespace GaraMS.API.Controllers
         }
 
         [HttpPost("CreateVehicle")]
-        public async Task<ActionResult> CreateVehicle([FromBody] Vehicle vehicle)
+        public async Task<ActionResult> CreateVehicle([FromBody] CreateVehicle vehicle)
         {
             string? token = Request.Headers["Authorization"].ToString().Split(" ")[1];
             var res = await _vehicleService.CreateVehicle(token, vehicle);
             return StatusCode(res.Code, res);
         }
+        [HttpPut("EditVehicle")]
+        public async Task<ActionResult> EditVehicle([FromBody] EditVehicle vehicle)
+        {
+            string? token = Request.Headers["Authorization"].ToString().Split(" ")[1];
+            var res = await _vehicleService.EditVehicle(token, vehicle);
+            return StatusCode(res.Code, res);
+        }
+
     }
 }

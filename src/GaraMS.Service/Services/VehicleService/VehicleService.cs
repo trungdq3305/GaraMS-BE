@@ -28,7 +28,7 @@ namespace GaraMS.Service.Services.VehicleService
             _authentocateService = authenticateService;
         }
 
-        public async Task<ResultModel> CreateVehicle(string? token, Vehicle vehicle)
+        public async Task<ResultModel> CreateVehicle(string? token, CreateVehicle vehicle)
         {
             var resultModel = new ResultModel
             {
@@ -69,7 +69,7 @@ namespace GaraMS.Service.Services.VehicleService
             return resultModel;
         }
 
-        public async Task<ResultModel> EditVehicle(string? token, Vehicle vehicle)
+        public async Task<ResultModel> EditVehicle(string? token, EditVehicle vehicle)
         {
             var resultModel = new ResultModel
             {
