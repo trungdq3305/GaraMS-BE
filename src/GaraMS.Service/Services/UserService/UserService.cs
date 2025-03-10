@@ -206,7 +206,8 @@ namespace GaraMS.Service.Services.UserService
                 Employee newEmployee = new Employee
                 {
                     Salary = 0,
-                    SpecializedId = null
+                    SpecializedId = null,
+                    UserId = user.UserId
                 };
 
                 await _userRepo.AddEmployeeAsync(newEmployee);
@@ -217,7 +218,8 @@ namespace GaraMS.Service.Services.UserService
                 Manager newManager = new Manager
                 {
                     Salary = 0,
-                    Gender = "none"
+                    Gender = "none",
+                    UserId = user.UserId
                 };
 
                 await _userRepo.AddManagerAsync(newManager);
