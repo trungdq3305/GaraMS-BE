@@ -182,10 +182,10 @@ namespace GaraMS.Service.Services.UserService
                 PhoneNumber = model.PhoneNumber,
                 FullName = model.FullName,
                 Address = model.Address,
-                Status = false,
+                Status = model.RoleId == 1 ? false : true,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                RoleId = model.RoleId ?? 4
+                RoleId = model.RoleId ?? 3
             };
             await _userRepo.AddAsync(user);
             if (model.RoleId == 1)
@@ -251,9 +251,6 @@ namespace GaraMS.Service.Services.UserService
 
             await _emailService.SendEmailAsync(user.Email, subject, body);
         }
-
-
-
 
         public async Task<ResultModel> ConfirmUserStatus(string token,int userId)
         {
