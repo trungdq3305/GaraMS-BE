@@ -6,7 +6,7 @@ namespace GaraMS.Service.Services.PromotionService
 {
     public interface IPromotionService
     {
-        Task<ResultModel> GetAllPromotionsAsync(string? token);
+        Task<ResultModel> GetAllPromotionsAsync();
         Task<ResultModel> GetPromotionByIdAsync(string? token, int id);
         Task<ResultModel> CreatePromotionAsync(string? token, PromotionModel promotionModel);
         Task<ResultModel> UpdatePromotionAsync(string? token, int id, UpdatePromotionModel promotionModel);

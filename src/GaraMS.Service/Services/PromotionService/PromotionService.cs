@@ -40,7 +40,7 @@ namespace GaraMS.Service.Services.PromotionService
             _serviceService = serviceService;
         }
 
-        public async Task<ResultModel> GetAllPromotionsAsync(string? token)
+        public async Task<ResultModel> GetAllPromotionsAsync()
         {
             var resultModel = new ResultModel
             {
@@ -49,30 +49,30 @@ namespace GaraMS.Service.Services.PromotionService
                 Data = null,
                 Message = null,
             };
-            var res = new ResultModel
-            {
-                IsSuccess = false,
-                Code = (int)HttpStatusCode.Unauthorized,
-                Message = "Invalid token."
-            };
+            //var res = new ResultModel
+            //{
+            //    IsSuccess = false,
+            //    Code = (int)HttpStatusCode.Unauthorized,
+            //    Message = "Invalid token."
+            //};
 
-            var decodeModel = _token.decode(token);
-            var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 3 });
-            if (!isValidRole)
-            {
-                resultModel.IsSuccess = false;
-                resultModel.Code = (int)HttpStatusCode.Forbidden;
-                resultModel.Message = "You don't have permission to perform this action.";
-                return resultModel;
-            }
-            if (!int.TryParse(decodeModel.userid, out int userId))
-            {
-                return res;
-            }
-            if (userId <= 0)
-            {
-                return res;
-            }
+            //var decodeModel = _token.decode(token);
+            //var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() {  });
+            //if (!isValidRole)
+            //{
+            //    resultModel.IsSuccess = false;
+            //    resultModel.Code = (int)HttpStatusCode.Forbidden;
+            //    resultModel.Message = "You don't have permission to perform this action.";
+            //    return resultModel;
+            //}
+            //if (!int.TryParse(decodeModel.userid, out int userId))
+            //{
+            //    return res;
+            //}
+            //if (userId <= 0)
+            //{
+            //    return res;
+            //}
 
             var promotions = await _promoRepo.GetAllPromotionsAsync();
             if (promotions == null)
