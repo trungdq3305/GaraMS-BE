@@ -88,5 +88,13 @@ namespace GaraMS.API.Controllers
             var result = await _employeeService.GetEmployeeServicesAsync(token, id);
             return StatusCode(result.Code, result);
         }
+
+        [HttpGet("{id}/specialization/")]
+        public async Task<IActionResult> GetSpecializations()
+        {
+            
+            var result = await _employeeService.GetAllSpeAsync();
+            return Ok(result);
+        }
     }
 }

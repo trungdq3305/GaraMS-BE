@@ -12,6 +12,7 @@ namespace GaraMS.Data.Repositories.EmployeeRepo
         Task<List<Employee>> GetAllEmployeesAsync();
         Task<Employee> GetEmployeeByIdAsync(int id);
         Task<List<Employee>> GetEmployeesBySpecializationAsync(int specializationId);
+        Task<List<Specialized>> GetAllSpecializationsAsync();
         Task<Employee> CreateEmployeeAsync(Employee employee);
         Task<Employee> UpdateEmployeeAsync(Employee employee);
         Task<bool> DeleteEmployeeAsync(int id);
