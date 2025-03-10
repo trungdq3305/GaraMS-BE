@@ -113,5 +113,11 @@ namespace GaraMS.Data.Repositories.EmployeeRepo
 
             return serviceEmployees.Select(se => se.Service).ToList();
         }
+
+        public async Task<List<Specialized>> GetAllSpecializationsAsync()
+        {
+            var items = await _context.Specializeds.ToListAsync();
+            return items;
+        }
     }
 }

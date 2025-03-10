@@ -36,7 +36,10 @@ namespace GaraMS.Data.Repositories.ServiceRepo
 
 		public async Task<List<Service>> GetAllAsync()
 		{
-			return await _context.Services.ToListAsync();
+			return await _context.Services.Include(c => c.ServiceEmployees).ThenInclude(b => b.Employee).ThenInclude(b => b.User)
+				.Include(c => c.ServiceInventories).ThenInclude(b => b.Inventory)
+                .Include(c => c.ServicePromotions).ThenInclude(b => b.Promotion).
+				ToListAsync();
 		}
 
 		public async Task<Service> GetServiceByIdAsync(int id)
