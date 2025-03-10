@@ -15,5 +15,7 @@ namespace GaraMS.Service.Services.ServiceService
 		Task<ResultModel> CreateServiceAsync(string token, ServiceModel model);
 		Task<ResultModel> UpdateServiceAsync(string token, int id, ServiceModel model);
 		Task<ResultModel> DeleteServiceAsync(string token, int id);
+		Task<ResultModel> UpdateServicePromotionAsync(string? token, int serviceId, decimal promotionAmount);
+		Task<ResultModel> ApplyPromotionToServiceAsync(string? token, int serviceId, decimal discountPercent);
 	}
 }

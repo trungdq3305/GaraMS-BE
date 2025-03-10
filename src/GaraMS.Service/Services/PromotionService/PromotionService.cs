@@ -6,6 +6,7 @@ using GaraMS.Data.ViewModels.PromotionModel;
 using GaraMS.Data.ViewModels.ResultModel;
 using GaraMS.Service.Services.AccountService;
 using GaraMS.Service.Services.AutheticateService;
+using GaraMS.Service.Services.ServiceService;
 using GaraMS.Service.Services.TokenService;
 using Microsoft.VisualBasic;
 using RTools_NTS.Util;
@@ -22,18 +23,21 @@ namespace GaraMS.Service.Services.PromotionService
         private readonly IAuthenticateService _authentocateService;
         private readonly ITokenService _token;
         private readonly IServiceRepo _serviceRepo;
+        private readonly IServiceService _serviceService;
 
         public PromotionService(IPromoRepo promoRepo
             , IAuthenticateService authenticateService
             , IAccountService accountService
             , ITokenService tokenService
-            , IServiceRepo serviceRepo)
+            , IServiceRepo serviceRepo
+            , IServiceService serviceService)
         {
             _promoRepo = promoRepo;
             _token = tokenService;
             _accountService = accountService;
             _authentocateService = authenticateService;
             _serviceRepo = serviceRepo;
+            _serviceService = serviceService;
         }
 
         public async Task<ResultModel> GetAllPromotionsAsync(string? token)
@@ -189,52 +193,61 @@ namespace GaraMS.Service.Services.PromotionService
                 };
             }
 
-            var promotion = new Promotion
+            try
             {
-                PromotionName = promotionModel.PromotionName,
-                StartDate = promotionModel.StartDate,
-                EndDate = promotionModel.EndDate,
-                DiscountPercent = promotionModel.DiscountPercent,
-                ServicePromotions = promotionModel.ServicePromotions.Select(sp => new ServicePromotion
+                // Create the promotion
+                var promotion = new Promotion
                 {
-                    ServiceId = sp.ServiceId,
-                }).ToList()
-            };
-            
+                    PromotionName = promotionModel.PromotionName,
+                    StartDate = promotionModel.StartDate,
+                    EndDate = promotionModel.EndDate,
+                    DiscountPercent = promotionModel.DiscountPercent
+                };
 
-            var createResult = await _promoRepo.CreatePromotionAsync(promotion);
-            if (!createResult)
-            {
-                resultModel.IsSuccess = false;
-                resultModel.Code = (int)HttpStatusCode.InternalServerError;
-                resultModel.Message = "Failed to create promotion.";
-                return resultModel;
-            }
+                var createdPromotion = await _promoRepo.CreatePromotionAsync(promotion);
+                if (createdPromotion == null)
+                    return new ResultModel { IsSuccess = false, Code = 400, Message = "Failed to create promotion" };
 
-            foreach (var servicePromotion in promotion.ServicePromotions)
-            {
-                var service = await _serviceRepo.GetServiceByIdAsync((int)servicePromotion.ServiceId);
-                if (service != null && service.TotalPrice.HasValue)
+                // Apply promotion to each service
+                foreach (var servicePromotion in promotionModel.ServicePromotions)
                 {
-                    decimal basePrice = service.TotalPrice.Value;
-                    var (_, discountAmount) = await _promoRepo.CalculateDiscountedPrice(
-                        (int)servicePromotion.ServiceId,
-                        basePrice
+                    // Create the relationship
+                    var relationResult = await _promoRepo.CreateServicePromotionAsync(
+                        servicePromotion.ServiceId,
+                        createdPromotion.PromotionId
                     );
 
-                    // Update only promotion amount
-                    await _serviceRepo.UpdateServicePromotionAsync(
-                        (int)servicePromotion.ServiceId,
-                        discountAmount
+                    if (!relationResult)
+                    {
+                        return new ResultModel
+                        {
+                            IsSuccess = false,
+                            Code = 400,
+                            Message = $"Failed to apply promotion to service {servicePromotion.ServiceId}"
+                        };
+                    }
+
+                    // Also directly update the service promotion amount
+                    await _serviceService.ApplyPromotionToServiceAsync(
+                        token,
+                        servicePromotion.ServiceId,
+                        promotionModel.DiscountPercent
                     );
                 }
+
+
+                return new ResultModel 
+                { 
+                    IsSuccess = true, 
+                    Code = 201, 
+                    Data = createdPromotion, 
+                    Message = "Promotion created and applied to services successfully" 
+                };
             }
-
-            resultModel.Data = promotion;
-            resultModel.Message = "Promotion created successfully";
-            return resultModel;
-
-            // After creating promotion, update prices for all services
+            catch (Exception ex)
+            {
+                return new ResultModel { IsSuccess = false, Code = 500, Message = ex.Message };
+            }
        
 
         }
@@ -348,40 +361,36 @@ namespace GaraMS.Service.Services.PromotionService
             }
             try
             {
-                // Check if promotion exists
-                var existingPromotion = await _promoRepo.GetPromotionByIdAsync(id);
-                if (existingPromotion == null)
+        // Check if promotion exists
+                var promotion = await _promoRepo.GetPromotionByIdAsync(id);
+                if (promotion == null)
                 {
-                    resultModel.IsSuccess = false;
-                    resultModel.Code = (int)HttpStatusCode.NotFound;
-                    resultModel.Message = "Promotion not found";
-                    return resultModel;
+                    return new ResultModel
+                    {
+                        IsSuccess = false,
+                        Code = 404,
+                        Message = "Promotion not found"
+                    };
                 }
 
-                // Reset prices for all services in this promotion before deleting
-                foreach (var servicePromotion in existingPromotion.ServicePromotions)
-                {
-                    await _serviceRepo.UpdateServicePriceAsync(
-                        (int)servicePromotion.ServiceId,
-                        totalPrice: null,    // Reset to null or you could set it back to ServicePrice
-                        promotion: null      // Reset promotion discount to null
-                    );
-                }
-
-                // Clear related ServicePromotion records first
-                existingPromotion.ServicePromotions?.Clear();
-
+                // Delete the promotion (this will also reset service prices)
                 var result = await _promoRepo.DeletePromotionAsync(id);
                 if (!result)
                 {
-                    resultModel.IsSuccess = false;
-                    resultModel.Code = (int)HttpStatusCode.InternalServerError;
-                    resultModel.Message = "Failed to delete promotion";
-                    return resultModel;
+                    return new ResultModel
+                    {
+                        IsSuccess = false,
+                        Code = 400,
+                        Message = "Failed to delete promotion"
+                    };
                 }
 
-                resultModel.Message = "Promotion deleted successfully";
-                return resultModel;
+                return new ResultModel
+                {
+                    IsSuccess = true,
+                    Code = 200,
+                    Message = "Promotion deleted successfully and service prices reset"
+                };
             }
             catch (Exception ex)
             {

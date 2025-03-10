@@ -33,7 +33,7 @@ namespace GaraMS.Data.ViewModels.PromotionModel
         public DateTime StartDate { get; set; }       // Changed to non-nullable
         public DateTime EndDate { get; set; }         // Changed to non-nullable
         public decimal DiscountPercent { get; set; }  // Changed to non-nullable
-        public List<int> ServiceIds { get; set; } = new();
+    public List<int> ServiceIds { get; set; } = new List<int>();
     }
 
     public class UpdatePromotionModel
