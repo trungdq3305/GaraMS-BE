@@ -55,7 +55,8 @@ namespace GaraMS.Data.Repositories.InventoryRepo
 					.ThenInclude(sinv => sinv.Service)
 				.Select(i => new InventoryModel
 				{
-					Name = i.Name,
+					InventoryId = i.InventoryId,
+                    Name = i.Name,
 					Description = i.Description,
 					Unit = i.Unit,
 					Price = i.Price,
