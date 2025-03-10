@@ -10,7 +10,12 @@ namespace GaraMS.Data.Models;
 
 public partial class Supplier
 {
-    [Key]
+	public Supplier()
+	{
+		InventorySuppliers = new HashSet<InventorySupplier>();
+	}
+
+	[Key]
     public int SupplierId { get; set; }
 
     [Required]
@@ -35,5 +40,5 @@ public partial class Supplier
     public DateTime? UpdatedAt { get; set; }
 
     [InverseProperty("Supplier")]
-    public virtual ICollection<InventorySupplier> InventorySuppliers { get; set; } = new List<InventorySupplier>();
+    public virtual ICollection<InventorySupplier> InventorySuppliers { get; set; }
 }

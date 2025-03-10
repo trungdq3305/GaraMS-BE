@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GaraMS.Data.ViewModels.ServiceModel
+namespace GaraMS.Data.ViewModels
 {
 	public class ServiceModel
 	{

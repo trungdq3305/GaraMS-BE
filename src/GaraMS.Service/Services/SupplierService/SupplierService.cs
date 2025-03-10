@@ -1,7 +1,7 @@
 ﻿using GaraMS.Data.Models;
 using GaraMS.Data.Repositories.SupplierRepo;
 using GaraMS.Data.ViewModels.ResultModel;
-using GaraMS.Data.ViewModels.SupplierModel;
+using GaraMS.Data.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;

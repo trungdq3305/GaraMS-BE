@@ -1,4 +1,4 @@
-﻿using GaraMS.Data.ViewModels.ServiceModel;
+﻿using GaraMS.Data.ViewModels;
 using GaraMS.Service.Services.ServiceService;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;

@@ -1,6 +1,6 @@
 ﻿using GaraMS.Data.Repositories.ServiceRepo;
 using GaraMS.Data.ViewModels.ResultModel;
-using GaraMS.Data.ViewModels.ServiceModel;
+using GaraMS.Data.ViewModels;
 using GaraMS.Service.Services.TokenService;
 using System;
 using System.Collections.Generic;

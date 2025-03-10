@@ -10,7 +10,7 @@ namespace GaraMS.Data.Repositories.InventoryRepo
 {
     public interface IInventoryRepo
     {
-		Task<List<Inventory>> GetAllInventoriesAsync();
+		Task<List<InventoryModel>> GetAllInventoriesAsync();
 		Task<Inventory> GetInventoryByIdAsync(int id);
 		Task<Inventory> CreateInventoryAsync(InventoryModel model);
 		Task<Inventory> UpdateInventoryAsync(int id, InventoryModel model);

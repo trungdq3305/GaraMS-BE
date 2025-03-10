@@ -1,5 +1,4 @@
-﻿using GaraMS.Data.ViewModels.ServiceModel;
-using GaraMS.Data.ViewModels.SupplierModel;
+﻿using GaraMS.Data.ViewModels;
 using GaraMS.Service.Services.SupplierService;
 using Microsoft.AspNetCore.Mvc;
 

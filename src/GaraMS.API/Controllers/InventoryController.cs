@@ -1,5 +1,5 @@
 ﻿using GaraMS.Data.ViewModels.InventoryModel;
-using GaraMS.Data.ViewModels.ServiceModel;
+using GaraMS.Data.ViewModels;
 using GaraMS.Service.Services.InventoryService;
 using Microsoft.AspNetCore.Mvc;
 

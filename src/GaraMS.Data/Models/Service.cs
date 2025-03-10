@@ -10,7 +10,12 @@ namespace GaraMS.Data.Models;
 
 public partial class Service
 {
-    [Key]
+	public Service()
+	{
+		ServiceInventories = new HashSet<ServiceInventory>();
+	}
+
+	[Key]
     public int ServiceId { get; set; }
 
     [Required]
@@ -56,7 +61,7 @@ public partial class Service
     public virtual ICollection<ServiceEmployee> ServiceEmployees { get; set; } = new List<ServiceEmployee>();
 
     [InverseProperty("Service")]
-    public virtual ICollection<ServiceInventory> ServiceInventories { get; set; } = new List<ServiceInventory>();
+    public virtual ICollection<ServiceInventory> ServiceInventories { get; set; }
 
     [InverseProperty("Service")]
     public virtual ICollection<ServicePromotion> ServicePromotions { get; set; } = new List<ServicePromotion>();

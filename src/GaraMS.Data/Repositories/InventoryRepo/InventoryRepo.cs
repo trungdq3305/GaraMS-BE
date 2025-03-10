@@ -1,4 +1,5 @@
 ﻿using GaraMS.Data.Models;
+using GaraMS.Data.ViewModels;
 using GaraMS.Data.ViewModels.InventoryModel;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -45,17 +46,39 @@ namespace GaraMS.Data.Repositories.InventoryRepo
 			return inventory;
 		}
 
-		public async Task<List<Inventory>> GetAllInventoriesAsync()
+		public async Task<List<InventoryModel>> GetAllInventoriesAsync()
 		{
-			return await _context.Inventories.Include(i => i.InventorySuppliers)
-											 .Include(i => i.ServiceInventories)
-											 .ToListAsync();
+			return await _context.Inventories
+				.Include(i => i.InventorySuppliers)
+					.ThenInclude(isup => isup.Supplier)
+				.Include(i => i.ServiceInventories)
+					.ThenInclude(sinv => sinv.Service)
+				.Select(i => new InventoryModel
+				{
+					Name = i.Name,
+					Description = i.Description,
+					Unit = i.Unit,
+					Price = i.Price,
+					Status = i.Status,
+					InventorySuppliers = i.InventorySuppliers.Select(isup => new SupplierModel
+					{
+						SupplierId = isup.Supplier.SupplierId,
+						Name = isup.Supplier.Name
+					}).ToList(),
+					ServiceInventories = i.ServiceInventories.Select(sinv => new ServiceModel
+					{
+						ServiceId = sinv.Service.ServiceId,
+						ServiceName = sinv.Service.ServiceName
+					}).ToList()
+				})
+				.ToListAsync();
 		}
+
 
 		public async Task<Inventory> GetInventoryByIdAsync(int id)
 		{
-			return await _context.Inventories.Include(i => i.InventorySuppliers)
-											 .Include(i => i.ServiceInventories)
+			return await _context.Inventories.Include(i => i.InventorySuppliers).ThenInclude(isup => isup.Supplier)
+											 .Include(i => i.ServiceInventories).ThenInclude(si => si.Service)
 											 .FirstOrDefaultAsync(i => i.InventoryId == id);
 		}
 
