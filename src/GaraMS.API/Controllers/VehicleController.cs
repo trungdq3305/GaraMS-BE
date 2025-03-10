@@ -26,10 +26,10 @@ namespace GaraMS.API.Controllers
         }
 
         [HttpGet("ViewVehiclebyLogin")]
-        public async Task<ActionResult> ViewVehiclebyLogin([FromQuery] Vehicle vehicle)
+        public async Task<ActionResult> ViewVehiclebyLogin()
         {
             string? token = Request.Headers["Authorization"].ToString().Split(" ")[1];
-            var res = await _vehicleService.ViewListVehicleByLogin(token, vehicle);
+            var res = await _vehicleService.ViewListVehicleByLogin(token, new Vehicle());
             return StatusCode(res.Code, res);
         }
 
