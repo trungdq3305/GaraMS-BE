@@ -9,7 +9,7 @@ namespace GaraMS.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    
     public class PromotionController : Controller
     {
         private readonly IPromotionService _promotionService;
@@ -21,11 +21,11 @@ namespace GaraMS.API.Controllers
         [HttpGet("promotions")]
         public async Task<ActionResult> GetAllPromotions()
         {
-            string? token = Request.Headers["Authorization"].ToString().Split(" ")[1];
-            var res = await _promotionService.GetAllPromotionsAsync(token);
+            //string? token = Request.Headers["Authorization"].ToString().Split(" ")[1];
+            var res = await _promotionService.GetAllPromotionsAsync();
             return StatusCode(res.Code, res);
         }
-
+        [Authorize]
         [HttpGet("Active-promotions")]
         public async Task<ActionResult> GetActivePromotions()
         {
@@ -33,7 +33,7 @@ namespace GaraMS.API.Controllers
             var res = await _promotionService.GetActivePromotionsAsync(token);
             return StatusCode(res.Code, res);
         }
-
+        [Authorize]
         [HttpGet("promotion/{id}")]
         public async Task<ActionResult> GetPromotionById(int id)
         {
@@ -41,7 +41,7 @@ namespace GaraMS.API.Controllers
             var res = await _promotionService.GetPromotionByIdAsync(token, id);
             return StatusCode(res.Code, res);
         }
-
+        [Authorize]
         [HttpPost("promotion")]
         public async Task<ActionResult> CreatePromotion([FromBody] PromotionModel promotionModel)
         {
@@ -49,7 +49,7 @@ namespace GaraMS.API.Controllers
             var res = await _promotionService.CreatePromotionAsync(token, promotionModel);
             return StatusCode(res.Code, res);
         }
-
+        [Authorize]
         [HttpPut("promotion/{id}")]
         public async Task<ActionResult> UpdatePromotion(int id, [FromBody] UpdatePromotionModel promotionModel)
         {
@@ -57,7 +57,7 @@ namespace GaraMS.API.Controllers
             var res = await _promotionService.UpdatePromotionAsync(token, id, promotionModel);
             return StatusCode(res.Code, res);
         }
-
+        [Authorize]
         [HttpDelete("promotion/{id}")]
         public async Task<ActionResult> DeletePromotion(int id)
         {
@@ -65,6 +65,7 @@ namespace GaraMS.API.Controllers
             var res = await _promotionService.DeletePromotionAsync(token, id);
             return StatusCode(res.Code, res);
         }
+        [Authorize]
         [HttpGet("calculate-discount")]
         public async Task<IActionResult> CalculateDiscount([FromQuery] int serviceId, [FromQuery] decimal originalPrice)
         {
