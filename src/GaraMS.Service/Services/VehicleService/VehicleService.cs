@@ -74,7 +74,7 @@ namespace GaraMS.Service.Services.VehicleService
                 CustomerId = customerId
             };
 
-            var createdVehicle = await _vehicleRepo.createVehicle(vehicle);
+            var createdVehicle = await _vehicleRepo.createVehicle(newVehicle);
             if (createdVehicle == null)
             {
                 resultModel.IsSuccess = false;
