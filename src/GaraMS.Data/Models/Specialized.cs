@@ -2,14 +2,22 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace GaraMS.Data.Models;
 
+[Table("Specialized")]
 public partial class Specialized
 {
+    [Key]
     public int SpecializedId { get; set; }
 
+    [Required]
+    [StringLength(100)]
     public string SpecializedName { get; set; }
 
+    [InverseProperty("Specialized")]
     public virtual ICollection<Employee> Employees { get; set; } = new List<Employee>();
 }

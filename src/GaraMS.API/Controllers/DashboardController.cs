@@ -18,14 +18,13 @@ public class DashboardController : ControllerBase
     }
 
     [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<DashboardModel>> GetDashboardData()
     {
         try
         {
-            var dashboard = await _dashboardService.GetDashboardDataAsync();
-            return Ok(dashboard);
+            string? token = Request.Headers["Authorization"].ToString().Split(" ")[1];
+            var dashboard = await _dashboardService.GetDashboardDataAsync(token);
+            return StatusCode(dashboard.Code, dashboard);
         }
         catch (Exception ex)
         {

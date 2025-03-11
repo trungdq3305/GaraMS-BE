@@ -2,28 +2,40 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace GaraMS.Data.Models;
 
 public partial class Inventory
 {
+	[Key]
     public int InventoryId { get; set; }
 
+    [Required]
+    [StringLength(100)]
     public string Name { get; set; }
 
     public string Description { get; set; }
 
+    [StringLength(50)]
     public string Unit { get; set; }
 
+    [Column(TypeName = "decimal(18, 2)")]
     public decimal? Price { get; set; }
 
     public bool? Status { get; set; }
 
+    [Column(TypeName = "datetime")]
     public DateTime? CreatedAt { get; set; }
 
+    [Column(TypeName = "datetime")]
     public DateTime? UpdatedAt { get; set; }
 
+    [InverseProperty("Inventory")]
     public virtual ICollection<InventorySupplier> InventorySuppliers { get; set; } = new List<InventorySupplier>();
 
+	[InverseProperty("Inventory")]
     public virtual ICollection<ServiceInventory> ServiceInventories { get; set; } = new List<ServiceInventory>();
 }

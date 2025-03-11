@@ -40,8 +40,6 @@ public partial class GaraManagementSystemContext : DbContext
 
     public virtual DbSet<Invoice> Invoices { get; set; }
 
-    public virtual DbSet<InvoiceDetail> InvoiceDetails { get; set; }
-
     public virtual DbSet<Manager> Managers { get; set; }
 
     public virtual DbSet<Promotion> Promotions { get; set; }
@@ -87,389 +85,200 @@ public partial class GaraManagementSystemContext : DbContext
     {
         modelBuilder.Entity<Appointment>(entity =>
         {
-            entity.HasKey(e => e.AppointmentId).HasName("PK__Appointm__8ECDFCC2CBCFBC32");
+            entity.HasKey(e => e.AppointmentId).HasName("PK__Appointm__8ECDFCC2FCA8E727");
 
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-            entity.Property(e => e.Date).HasColumnType("datetime");
-            entity.Property(e => e.Status).HasMaxLength(50);
-            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+            entity.ToTable(tb => tb.HasTrigger("trg_CreateInvoiceOnAppointmentAccepted"));
 
-            entity.HasOne(d => d.AppointmentStatus).WithMany(p => p.Appointments)
-                .HasForeignKey(d => d.AppointmentStatusId)
-                .HasConstraintName("FK__Appointme__Appoi__59063A47");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
 
-            entity.HasOne(d => d.Invoice).WithMany(p => p.Appointments)
-                .HasForeignKey(d => d.InvoiceId)
-                .HasConstraintName("FK__Appointme__Invoi__59FA5E80");
+            entity.HasOne(d => d.AppointmentStatus).WithMany(p => p.Appointments).HasConstraintName("FK__Appointme__Appoi__59FA5E80");
 
-            entity.HasOne(d => d.Vehicle).WithMany(p => p.Appointments)
-                .HasForeignKey(d => d.VehicleId)
-                .HasConstraintName("FK__Appointme__Vehic__5812160E");
+            entity.HasOne(d => d.Vehicle).WithMany(p => p.Appointments).HasConstraintName("FK__Appointme__Vehic__59063A47");
         });
 
         modelBuilder.Entity<AppointmentService>(entity =>
         {
-            entity.HasKey(e => e.AppointmentServiceId).HasName("PK__Appointm__3B38F396E0D6E50B");
+            entity.HasKey(e => e.AppointmentServiceId).HasName("PK__Appointm__3B38F39691E228EB");
 
-            entity.ToTable("AppointmentService");
+            entity.HasOne(d => d.Appointment).WithMany(p => p.AppointmentServices).HasConstraintName("FK__Appointme__Appoi__71D1E811");
 
-            entity.HasOne(d => d.Appointment).WithMany(p => p.AppointmentServices)
-                .HasForeignKey(d => d.AppointmentId)
-                .HasConstraintName("FK__Appointme__Appoi__6D0D32F4");
+            entity.HasOne(d => d.Employee).WithMany(p => p.AppointmentServices).HasConstraintName("FK__Appointme__Emplo__72C60C4A");
 
-            entity.HasOne(d => d.Service).WithMany(p => p.AppointmentServices)
-                .HasForeignKey(d => d.ServiceId)
-                .HasConstraintName("FK__Appointme__Servi__6C190EBB");
+            entity.HasOne(d => d.Service).WithMany(p => p.AppointmentServices).HasConstraintName("FK__Appointme__Servi__70DDC3D8");
         });
 
         modelBuilder.Entity<AppointmentStatus>(entity =>
         {
-            entity.HasKey(e => e.AppointmentStatusId).HasName("PK__Appointm__A619B660AFE7FAFC");
-
-            entity.ToTable("AppointmentStatus");
-
-            entity.Property(e => e.StatusName)
-                .IsRequired()
-                .HasMaxLength(50);
+            entity.HasKey(e => e.AppointmentStatusId).HasName("PK__Appointm__A619B66097E57D98");
         });
 
         modelBuilder.Entity<Category>(entity =>
         {
-            entity.HasKey(e => e.CategoryId).HasName("PK__Categori__19093A0B2E452677");
+            entity.HasKey(e => e.CategoryId).HasName("PK__Categori__19093A0B81A9ECD3");
 
-            entity.Property(e => e.CategoryName)
-                .IsRequired()
-                .HasMaxLength(100);
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.Status).HasDefaultValue(true);
-            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<Customer>(entity =>
         {
-            entity.HasKey(e => e.CustomerId).HasName("PK__Customer__A4AE64D8202C1009");
+            entity.HasKey(e => e.CustomerId).HasName("PK__Customer__A4AE64D86F82ADF6");
 
-            entity.Property(e => e.Gender).HasMaxLength(10);
-
-            entity.HasOne(d => d.User).WithMany(p => p.Customers)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK__Customers__UserI__46E78A0C");
+            entity.HasOne(d => d.User).WithMany(p => p.Customers).HasConstraintName("FK__Customers__UserI__4CA06362");
         });
 
         modelBuilder.Entity<Employee>(entity =>
         {
-            entity.HasKey(e => e.EmployeeId).HasName("PK__Employee__7AD04F118489CF90");
+            entity.HasKey(e => e.EmployeeId).HasName("PK__Employee__7AD04F11F2751B30");
 
-            entity.Property(e => e.Salary).HasColumnType("decimal(18, 2)");
+            entity.HasOne(d => d.Specialized).WithMany(p => p.Employees).HasConstraintName("FK__Employees__Speci__48CFD27E");
 
-            entity.HasOne(d => d.Specialized).WithMany(p => p.Employees)
-                .HasForeignKey(d => d.SpecializedId)
-                .HasConstraintName("FK__Employees__Speci__75A278F5");
-
-            entity.HasOne(d => d.User).WithMany(p => p.Employees)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK__Employees__UserI__76969D2E");
+            entity.HasOne(d => d.User).WithMany(p => p.Employees).HasConstraintName("FK__Employees__UserI__49C3F6B7");
         });
 
         modelBuilder.Entity<Feedback>(entity =>
         {
-            entity.HasKey(e => e.FeedbackId).HasName("PK__Feedback__6A4BEDD696D758A1");
+            entity.HasKey(e => e.FeedbackId).HasName("PK__Feedback__6A4BEDD6CD5EBCF0");
 
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
         });
 
         modelBuilder.Entity<Gara>(entity =>
         {
-            entity.HasKey(e => e.GaraId).HasName("PK__Gara__E6DDAA602D9E4453");
+            entity.HasKey(e => e.GaraId).HasName("PK__Gara__E6DDAA6034E40B38");
 
-            entity.ToTable("Gara");
-
-            entity.HasIndex(e => e.GaraNumber, "UQ__Gara__8CEDF047EB17B5B8").IsUnique();
-
-            entity.Property(e => e.GaraNumber)
-                .IsRequired()
-                .HasMaxLength(50);
-
-            entity.HasOne(d => d.User).WithMany(p => p.Garas)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK__Gara__UserId__412EB0B6");
+            entity.HasOne(d => d.User).WithMany(p => p.Garas).HasConstraintName("FK__Gara__UserId__412EB0B6");
         });
 
         modelBuilder.Entity<Inventory>(entity =>
         {
-            entity.HasKey(e => e.InventoryId).HasName("PK__Inventor__F5FDE6B3F8571756");
+            entity.HasKey(e => e.InventoryId).HasName("PK__Inventor__F5FDE6B385BA85B2");
 
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-            entity.Property(e => e.Name)
-                .IsRequired()
-                .HasMaxLength(100);
-            entity.Property(e => e.Price).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.Status).HasDefaultValue(true);
-            entity.Property(e => e.Unit).HasMaxLength(50);
-            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<InventorySupplier>(entity =>
         {
-            entity.HasKey(e => e.InventorySupplierId).HasName("PK__Inventor__92729B6230B7448C");
+            entity.HasKey(e => e.InventorySupplierId).HasName("PK__Inventor__92729B623469FEDA");
 
-            entity.ToTable("InventorySupplier");
+            entity.HasOne(d => d.Inventory).WithMany(p => p.InventorySuppliers).HasConstraintName("FK__Inventory__Inven__0E6E26BF");
 
-            entity.HasOne(d => d.Inventory).WithMany(p => p.InventorySuppliers)
-                .HasForeignKey(d => d.InventoryId)
-                .HasConstraintName("FK__Inventory__Inven__0E6E26BF");
-
-            entity.HasOne(d => d.Supplier).WithMany(p => p.InventorySuppliers)
-                .HasForeignKey(d => d.SupplierId)
-                .HasConstraintName("FK__Inventory__Suppl__0F624AF8");
+            entity.HasOne(d => d.Supplier).WithMany(p => p.InventorySuppliers).HasConstraintName("FK__Inventory__Suppl__0F624AF8");
         });
 
         modelBuilder.Entity<Invoice>(entity =>
         {
-            entity.HasKey(e => e.InvoiceId).HasName("PK__Invoices__D796AAB5B9AE480B");
+            entity.HasKey(e => e.InvoiceId).HasName("PK__Invoices__D796AAB5A5E2D91C");
 
-            entity.Property(e => e.Date)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-            entity.Property(e => e.PaymentMethod).HasMaxLength(50);
-            entity.Property(e => e.Status).HasMaxLength(50);
-            entity.Property(e => e.TotalAmount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.Date).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.TotalAmount).HasDefaultValue(0m);
 
-            entity.HasOne(d => d.Customer).WithMany(p => p.Invoices)
-                .HasForeignKey(d => d.CustomerId)
-                .HasConstraintName("FK__Invoices__Custom__52593CB8");
+            entity.HasOne(d => d.Appointment).WithOne(p => p.Invoice).HasConstraintName("FK__Invoices__Appoin__5DCAEF64");
 
-            entity.HasOne(d => d.Feedback).WithMany(p => p.Invoices)
-                .HasForeignKey(d => d.FeedbackId)
-                .HasConstraintName("FK__Invoices__Feedba__5441852A");
-        });
-
-        modelBuilder.Entity<InvoiceDetail>(entity =>
-        {
-            entity.HasKey(e => e.InvoiceDetailId).HasName("PK__InvoiceD__1F1578114571EA4E");
-
-            entity.ToTable("InvoiceDetail");
-
-            entity.Property(e => e.Price).HasColumnType("decimal(18, 2)");
-
-            entity.HasOne(d => d.Invoice).WithMany(p => p.InvoiceDetails)
-                .HasForeignKey(d => d.InvoiceId)
-                .HasConstraintName("FK__InvoiceDe__Invoi__5CD6CB2B");
+            entity.HasOne(d => d.Customer).WithMany(p => p.Invoices).HasConstraintName("FK__Invoices__Custom__5EBF139D");
         });
 
         modelBuilder.Entity<Manager>(entity =>
         {
-            entity.HasKey(e => e.ManagerId).HasName("PK__Manager__3BA2AAE10C3C3529");
+            entity.HasKey(e => e.ManagerId).HasName("PK__Manager__3BA2AAE195E095F0");
 
-            entity.ToTable("Manager");
-
-            entity.Property(e => e.Gender).HasMaxLength(10);
-            entity.Property(e => e.Salary).HasColumnType("decimal(18, 2)");
-
-            entity.HasOne(d => d.User).WithMany(p => p.Managers)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK__Manager__UserId__440B1D61");
+            entity.HasOne(d => d.User).WithMany(p => p.Managers).HasConstraintName("FK__Manager__UserId__440B1D61");
         });
 
         modelBuilder.Entity<Promotion>(entity =>
         {
-            entity.HasKey(e => e.PromotionId).HasName("PK__Promotio__52C42FCF266F93FD");
-
-            entity.Property(e => e.DiscountPercent).HasColumnType("decimal(5, 2)");
-            entity.Property(e => e.EndDate).HasColumnType("datetime");
-            entity.Property(e => e.PromotionName)
-                .IsRequired()
-                .HasMaxLength(100);
-            entity.Property(e => e.StartDate).HasColumnType("datetime");
+            entity.HasKey(e => e.PromotionId).HasName("PK__Promotio__52C42FCFB9FC9FC1");
         });
 
         modelBuilder.Entity<Report>(entity =>
         {
-            entity.HasKey(e => e.ReportId).HasName("PK__Reports__D5BD48058546C37C");
+            entity.HasKey(e => e.ReportId).HasName("PK__Reports__D5BD48054C5E7D3F");
 
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-            entity.Property(e => e.Title).HasMaxLength(255);
-            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
 
-            entity.HasOne(d => d.Customer).WithMany(p => p.Reports)
-                .HasForeignKey(d => d.CustomerId)
-                .HasConstraintName("FK__Reports__Custome__60A75C0F");
+            entity.HasOne(d => d.Customer).WithMany(p => p.Reports).HasConstraintName("FK__Reports__Custome__656C112C");
         });
 
         modelBuilder.Entity<Service>(entity =>
         {
-            entity.HasKey(e => e.ServiceId).HasName("PK__Services__C51BB00AD67D64EE");
+            entity.HasKey(e => e.ServiceId).HasName("PK__Services__C51BB00A2AA17056");
 
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-            entity.Property(e => e.InventoryPrice).HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.Promotion).HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.ServiceName)
-                .IsRequired()
-                .HasMaxLength(100);
-            entity.Property(e => e.ServicePrice).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.Status).HasDefaultValue(true);
-            entity.Property(e => e.TotalPrice).HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
 
-            entity.HasOne(d => d.Category).WithMany(p => p.Services)
-                .HasForeignKey(d => d.CategoryId)
-                .HasConstraintName("FK__Services__Catego__693CA210");
+            entity.HasOne(d => d.Category).WithMany(p => p.Services).HasConstraintName("FK__Services__Catego__6E01572D");
         });
 
         modelBuilder.Entity<ServiceEmployee>(entity =>
         {
-            entity.HasKey(e => e.ServiceEmployeeId).HasName("PK__ServiceE__3FAF6506EF133419");
+            entity.HasKey(e => e.ServiceEmployeeId).HasName("PK__ServiceE__3FAF6506CE63015D");
 
-            entity.ToTable("ServiceEmployee");
+            entity.HasOne(d => d.Employee).WithMany(p => p.ServiceEmployees).HasConstraintName("FK__ServiceEm__Emplo__7A672E12");
 
-            entity.HasOne(d => d.Employee).WithMany(p => p.ServiceEmployees)
-                .HasForeignKey(d => d.EmployeeId)
-                .HasConstraintName("FK__ServiceEm__Emplo__7A672E12");
-
-            entity.HasOne(d => d.Service).WithMany(p => p.ServiceEmployees)
-                .HasForeignKey(d => d.ServiceId)
-                .HasConstraintName("FK__ServiceEm__Servi__797309D9");
+            entity.HasOne(d => d.Service).WithMany(p => p.ServiceEmployees).HasConstraintName("FK__ServiceEm__Servi__797309D9");
         });
 
         modelBuilder.Entity<ServiceInventory>(entity =>
         {
-            entity.HasKey(e => e.ServiceInventoryId).HasName("PK__ServiceI__0EF88803DC2F6F7A");
+            entity.HasKey(e => e.ServiceInventoryId).HasName("PK__ServiceI__0EF8880373DDC9D6");
 
-            entity.ToTable("ServiceInventory");
+            entity.HasOne(d => d.Inventory).WithMany(p => p.ServiceInventories).HasConstraintName("FK__ServiceIn__Inven__06CD04F7");
 
-            entity.HasOne(d => d.Inventory).WithMany(p => p.ServiceInventories)
-                .HasForeignKey(d => d.InventoryId)
-                .HasConstraintName("FK__ServiceIn__Inven__06CD04F7");
-
-            entity.HasOne(d => d.Service).WithMany(p => p.ServiceInventories)
-                .HasForeignKey(d => d.ServiceId)
-                .HasConstraintName("FK__ServiceIn__Servi__07C12930");
+            entity.HasOne(d => d.Service).WithMany(p => p.ServiceInventories).HasConstraintName("FK__ServiceIn__Servi__07C12930");
         });
 
         modelBuilder.Entity<ServicePromotion>(entity =>
         {
-            entity.HasKey(e => e.ServicePromotionId).HasName("PK__ServiceP__E301983929580A24");
+            entity.HasKey(e => e.ServicePromotionId).HasName("PK__ServiceP__E30198398C6E55D0");
 
-            entity.ToTable("ServicePromotion");
+            entity.HasOne(d => d.Promotion).WithMany(p => p.ServicePromotions).HasConstraintName("FK__ServicePr__Promo__00200768");
 
-            entity.HasOne(d => d.Promotion).WithMany(p => p.ServicePromotions)
-                .HasForeignKey(d => d.PromotionId)
-                .HasConstraintName("FK__ServicePr__Promo__00200768");
-
-            entity.HasOne(d => d.Service).WithMany(p => p.ServicePromotions)
-                .HasForeignKey(d => d.ServiceId)
-                .HasConstraintName("FK__ServicePr__Servi__7F2BE32F");
+            entity.HasOne(d => d.Service).WithMany(p => p.ServicePromotions).HasConstraintName("FK__ServicePr__Servi__7F2BE32F");
         });
 
         modelBuilder.Entity<Specialized>(entity =>
         {
-            entity.HasKey(e => e.SpecializedId).HasName("PK__Speciali__D22EFDA3886B5EF4");
-
-            entity.ToTable("Specialized");
-
-            entity.Property(e => e.SpecializedName)
-                .IsRequired()
-                .HasMaxLength(100);
+            entity.HasKey(e => e.SpecializedId).HasName("PK__Speciali__D22EFDA3E7A90BF5");
         });
 
         modelBuilder.Entity<Supplier>(entity =>
         {
-            entity.HasKey(e => e.SupplierId).HasName("PK__Supplier__4BE666B4B556440A");
+            entity.HasKey(e => e.SupplierId).HasName("PK__Supplier__4BE666B4BE39F4E6");
 
-            entity.Property(e => e.Address).HasMaxLength(255);
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-            entity.Property(e => e.Email).HasMaxLength(100);
-            entity.Property(e => e.Name)
-                .IsRequired()
-                .HasMaxLength(100);
-            entity.Property(e => e.Phone).HasMaxLength(20);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.Status).HasDefaultValue(true);
-            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.UserId).HasName("PK__Users__1788CC4C2BC11717");
+            entity.HasKey(e => e.UserId).HasName("PK__Users__1788CC4C505A7878");
 
-            entity.HasIndex(e => e.Email, "UQ__Users__A9D10534CDCDBE6E").IsUnique();
-
-            entity.HasIndex(e => e.UserName, "UQ__Users__C9F28456FA64DD61").IsUnique();
-
-            entity.Property(e => e.Address).HasMaxLength(255);
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-            entity.Property(e => e.Email).HasMaxLength(100);
-            entity.Property(e => e.FullName).HasMaxLength(100);
-            entity.Property(e => e.Password)
-                .IsRequired()
-                .HasMaxLength(255);
-            entity.Property(e => e.PhoneNumber).HasMaxLength(20);
-            entity.Property(e => e.RoleId).HasColumnName("RoleID");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.Status).HasDefaultValue(true);
-            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
-            entity.Property(e => e.UserName)
-                .IsRequired()
-                .HasMaxLength(50);
 
-            entity.HasOne(d => d.Role).WithMany(p => p.Users)
-                .HasForeignKey(d => d.RoleId)
-                .HasConstraintName("FK__Users__RoleID__3D5E1FD2");
+            entity.HasOne(d => d.Role).WithMany(p => p.Users).HasConstraintName("FK__Users__RoleID__3D5E1FD2");
         });
 
         modelBuilder.Entity<UserRole>(entity =>
         {
-            entity.HasKey(e => e.RoleId).HasName("PK__UserRole__8AFACE1A9EAFB506");
-
-            entity.Property(e => e.RoleName)
-                .IsRequired()
-                .HasMaxLength(50);
+            entity.HasKey(e => e.RoleId).HasName("PK__UserRole__8AFACE1A45567A7B");
         });
 
         modelBuilder.Entity<Vehicle>(entity =>
         {
-            entity.HasKey(e => e.VehicleId).HasName("PK__Vehicles__476B5492C85CECBE");
+            entity.HasKey(e => e.VehicleId).HasName("PK__Vehicles__476B5492F8D6512C");
 
-            entity.HasIndex(e => e.PlateNumber, "UQ__Vehicles__03692624A8A14F12").IsUnique();
-
-            entity.Property(e => e.Brand).HasMaxLength(50);
-            entity.Property(e => e.Model).HasMaxLength(50);
-            entity.Property(e => e.PlateNumber)
-                .IsRequired()
-                .HasMaxLength(20);
-
-            entity.HasOne(d => d.Customer).WithMany(p => p.Vehicles)
-                .HasForeignKey(d => d.CustomerId)
-                .HasConstraintName("FK__Vehicles__Custom__4AB81AF0");
+            entity.HasOne(d => d.Customer).WithMany(p => p.Vehicles).HasConstraintName("FK__Vehicles__Custom__5070F446");
         });
 
         modelBuilder.Entity<WarrantyHistory>(entity =>
         {
-            entity.HasKey(e => e.WarrantyHistoryId).HasName("PK__Warranty__5D65AB48650772E3");
+            entity.HasKey(e => e.WarrantyHistoryId).HasName("PK__Warranty__5D65AB487E7FDCBD");
 
-            entity.ToTable("WarrantyHistory");
-
-            entity.Property(e => e.EndDay).HasColumnType("datetime");
-            entity.Property(e => e.StartDay).HasColumnType("datetime");
             entity.Property(e => e.Status).HasDefaultValue(true);
 
-            entity.HasOne(d => d.Service).WithMany(p => p.WarrantyHistories)
-                .HasForeignKey(d => d.ServiceId)
-                .HasConstraintName("FK__WarrantyH__Servi__70DDC3D8");
+            entity.HasOne(d => d.Service).WithMany(p => p.WarrantyHistories).HasConstraintName("FK__WarrantyH__Servi__76969D2E");
         });
 
         OnModelCreatingPartial(modelBuilder);

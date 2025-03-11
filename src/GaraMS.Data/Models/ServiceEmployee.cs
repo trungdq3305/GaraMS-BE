@@ -2,18 +2,27 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace GaraMS.Data.Models;
 
+[Table("ServiceEmployee")]
 public partial class ServiceEmployee
 {
+    [Key]
     public int ServiceEmployeeId { get; set; }
 
     public int? ServiceId { get; set; }
 
     public int? EmployeeId { get; set; }
 
+    [ForeignKey("EmployeeId")]
+    [InverseProperty("ServiceEmployees")]
     public virtual Employee Employee { get; set; }
 
+    [ForeignKey("ServiceId")]
+    [InverseProperty("ServiceEmployees")]
     public virtual Service Service { get; set; }
 }

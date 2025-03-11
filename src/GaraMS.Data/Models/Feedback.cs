@@ -2,18 +2,21 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace GaraMS.Data.Models;
 
 public partial class Feedback
 {
+    [Key]
     public int FeedbackId { get; set; }
 
     public string Comment { get; set; }
 
     public int? Rating { get; set; }
 
+    [Column(TypeName = "datetime")]
     public DateTime? CreatedAt { get; set; }
-
-    public virtual ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
 }

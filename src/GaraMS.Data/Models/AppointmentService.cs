@@ -2,18 +2,33 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace GaraMS.Data.Models;
 
+[Table("AppointmentService")]
 public partial class AppointmentService
 {
+    [Key]
     public int AppointmentServiceId { get; set; }
 
     public int? ServiceId { get; set; }
 
     public int? AppointmentId { get; set; }
 
+    public int? EmployeeId { get; set; }
+
+    [ForeignKey("AppointmentId")]
+    [InverseProperty("AppointmentServices")]
     public virtual Appointment Appointment { get; set; }
 
+    [ForeignKey("EmployeeId")]
+    [InverseProperty("AppointmentServices")]
+    public virtual Employee Employee { get; set; }
+
+    [ForeignKey("ServiceId")]
+    [InverseProperty("AppointmentServices")]
     public virtual Service Service { get; set; }
 }

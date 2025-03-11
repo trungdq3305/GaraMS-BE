@@ -2,21 +2,29 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace GaraMS.Data.Models;
 
 public partial class Appointment
 {
+    [Key]
     public int AppointmentId { get; set; }
 
+    [Column(TypeName = "datetime")]
     public DateTime? Date { get; set; }
 
     public string Note { get; set; }
 
-    public string Status { get; set; } = "Pending";
+    [StringLength(50)]
+    public string Status { get; set; }
 
+    [Column(TypeName = "datetime")]
     public DateTime? CreatedAt { get; set; }
 
+    [Column(TypeName = "datetime")]
     public DateTime? UpdatedAt { get; set; }
 
     public int? WaitingTime { get; set; }
@@ -27,13 +35,17 @@ public partial class Appointment
 
     public int? AppointmentStatusId { get; set; }
 
-    public int? InvoiceId { get; set; }
-
+    [InverseProperty("Appointment")]
     public virtual ICollection<AppointmentService> AppointmentServices { get; set; } = new List<AppointmentService>();
 
+    [ForeignKey("AppointmentStatusId")]
+    [InverseProperty("Appointments")]
     public virtual AppointmentStatus AppointmentStatus { get; set; }
 
+    [InverseProperty("Appointment")]
     public virtual Invoice Invoice { get; set; }
 
+    [ForeignKey("VehicleId")]
+    [InverseProperty("Appointments")]
     public virtual Vehicle Vehicle { get; set; }
 }

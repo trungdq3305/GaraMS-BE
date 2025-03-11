@@ -2,18 +2,27 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace GaraMS.Data.Models;
 
+[Table("ServicePromotion")]
 public partial class ServicePromotion
 {
+    [Key]
     public int ServicePromotionId { get; set; }
 
     public int? ServiceId { get; set; }
 
     public int? PromotionId { get; set; }
 
+    [ForeignKey("PromotionId")]
+    [InverseProperty("ServicePromotions")]
     public virtual Promotion Promotion { get; set; }
 
+    [ForeignKey("ServiceId")]
+    [InverseProperty("ServicePromotions")]
     public virtual Service Service { get; set; }
 }

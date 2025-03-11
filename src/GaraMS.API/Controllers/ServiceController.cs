@@ -1,4 +1,4 @@
-﻿using GaraMS.Data.ViewModels.ServiceDTO;
+﻿using GaraMS.Data.ViewModels;
 using GaraMS.Service.Services.ServiceService;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
@@ -27,32 +27,61 @@ namespace GaraMS.API.Controllers
 		public async Task<IActionResult> GetServiceById(int id)
 		{
 			var result = await _serviceService.GetServiceByIdAsync(id);
-			if (result == null) return NotFound("Service not found");
+			if (!result.IsSuccess) return NotFound(result);
 			return Ok(result);
 		}
 
 		[HttpPost("service")]
-		public async Task<IActionResult> CreateService([FromBody] ServiceDTO serviceDto)
+		public async Task<IActionResult> CreateService([FromHeader] string authorization, [FromBody] ServiceModel model)
 		{
-			var result = await _serviceService.CreateServiceAsync(serviceDto);
-			if (!result) return BadRequest("Failed to create service");
-			return Ok("Service created successfully");
+			if (!ModelState.IsValid) return BadRequest(ModelState);
+
+			var token = Request.Headers["Authorization"].FirstOrDefault();
+			var result = await _serviceService.CreateServiceAsync(token, model);
+
+			if (!result.IsSuccess) return BadRequest(result);
+
+			return CreatedAtAction(nameof(GetServiceById), new { id = ((dynamic)result.Data)?.ServiceId }, result);
 		}
 
 		[HttpPut("service/{id}")]
-		public async Task<IActionResult> UpdateService(int id, [FromBody] ServiceDTO serviceDto)
+		public async Task<IActionResult> UpdateService([FromHeader] string authorization, int id, [FromBody] ServiceModel model)
 		{
-			var result = await _serviceService.UpdateServiceAsync(id, serviceDto);
-			if (!result) return NotFound("Service not found or update failed");
-			return Ok("Service updated successfully");
+			if (!ModelState.IsValid) return BadRequest(ModelState);
+
+			var token = Request.Headers["Authorization"].FirstOrDefault();
+			var result = await _serviceService.UpdateServiceAsync(token, id, model);
+
+			if (!result.IsSuccess) return NotFound(result);
+
+			return Ok(result);
 		}
 
 		[HttpDelete("service/{id}")]
-		public async Task<IActionResult> DeleteService(int id)
+		public async Task<IActionResult> DeleteService([FromHeader] string authorization, int id)
 		{
-			var result = await _serviceService.DeleteServiceAsync(id);
-			if (!result) return NotFound("Service not found");
-			return Ok("Service deleted successfully");
+			var token = Request.Headers["Authorization"].FirstOrDefault();
+			var result = await _serviceService.DeleteServiceAsync(token, id);
+
+			if (!result.IsSuccess) return NotFound(result);
+
+			return Ok(result);
+		}
+
+		[HttpGet("service-inventories")]
+		public async Task<IActionResult> GetAllServiceInventories()
+		{
+			var result = await _serviceService.GetAllServiceInventoriesAsync();
+			return Ok(result);
+		}
+
+		[HttpPost("assign-inventory-to-service")]
+		public async Task<IActionResult> AssignInventoryToService([FromBody] AssignInventoryToServiceModel model)
+		{
+			if (!ModelState.IsValid) return BadRequest(ModelState);
+
+			var result = await _serviceService.AssignInventoryToServiceAsync(model);
+			return result.IsSuccess ? Ok(result) : BadRequest(result);
 		}
 	}
 }

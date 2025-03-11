@@ -1,5 +1,5 @@
 ﻿using GaraMS.Data.Models;
-using GaraMS.Data.ViewModels.AppointmentDTO;
+using GaraMS.Data.ViewModels.AppointmentModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,9 +12,9 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
 	{
 		Task<List<Appointment>> GetAllAppointmentsAsync();
 		Task<Appointment> GetAppointmentByIdAsync(int id);
-		Task<Appointment> CreateAppointmentAsync(AppointmentDTO dto);
-		Task<bool> UpdateAppointmentAsync(int id, AppointmentDTO dto);
-        Task<bool> UpdateAppointmentStatusAsync(int id, string status, string reason);
-        Task<bool> DeleteAppointmentAsync(int id);
+		Task<Appointment> CreateAppointmentAsync(AppointmentModel model);
+		Task<Appointment?> UpdateAppointmentAsync(int id, AppointmentModel model);
+		Task<Appointment?> UpdateAppointmentStatusAsync(int id, string status, string reason);
+		Task<Appointment?> DeleteAppointmentAsync(int id);
 	}
 }

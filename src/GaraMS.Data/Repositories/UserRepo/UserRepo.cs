@@ -75,6 +75,23 @@ namespace GaraMS.Data.Repositories.UserRepo
             await _context.SaveChangesAsync();
             return employee;
         }
+        public async Task UpdateAsync(User user)
+        {
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<User> GetFalseUser()
+        {
+            return await _context.Users.FirstOrDefaultAsync(u => u.Status == false);
+        }
+        public async Task<int> GetCustomerIdByUserIdAsync(int userId)
+        {
+            var customer = await _context.Customers
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+            return customer.CustomerId;
+        }
     } 
 
 }

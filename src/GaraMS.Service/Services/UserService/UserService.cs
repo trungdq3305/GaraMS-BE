@@ -1,17 +1,17 @@
 ﻿using GaraMS.Data.Models;
 using GaraMS.Data.Repositories.UserRepo;
+using GaraMS.Data.ViewModels.AutheticateModel;
 using GaraMS.Data.ViewModels.CreateReqModel;
 using GaraMS.Data.ViewModels.ResultModel;
 using GaraMS.Service.Services.AccountService;
 using GaraMS.Service.Services.AutheticateService;
+using GaraMS.Service.Services.Email;
+using GaraMS.Service.Services.HashPass;
 using GaraMS.Service.Services.TokenService;
 using GaraMS.Service.Services.Validate;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Microsoft.Extensions.Configuration;
+using RTools_NTS.Util;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GaraMS.Service.Services.UserService
 {
@@ -22,11 +22,15 @@ namespace GaraMS.Service.Services.UserService
         private readonly IAccountService _accountService;
         private readonly IAuthenticateService _authentocateService;
         private readonly ITokenService _token;
+        private readonly IEmailService _emailService;
+        private readonly IConfiguration _configuration;
         public UserService(IUserRepo userRepo,
             ITokenService token,
             IAuthenticateService authenticateService,
             IAccountService accountService,
-            IValidateService userValidate
+            IValidateService userValidate,
+            IEmailService emailService,
+            IConfiguration configuration
             )
         {
             _userRepo = userRepo;
@@ -34,7 +38,8 @@ namespace GaraMS.Service.Services.UserService
             _authentocateService = authenticateService;
             _accountService = accountService;
             _Validate = userValidate;
-
+            _emailService = emailService;
+            _configuration = configuration;
         }
 
         public async Task<ResultModel> GetLoggedInUser(string token)
@@ -103,9 +108,49 @@ namespace GaraMS.Service.Services.UserService
             };
 
         }
+        public async Task<ResultModel> GetUserById(int id)
+        {
+            
 
+            
 
+            var user = await _userRepo.GetLoginAsync(id);
+            if (user == null)
+            {
+                return new ResultModel
+                {
+                    IsSuccess = false,
+                    Code = (int)HttpStatusCode.NotFound,
+                    Message = "User not found."
+                };
+            }
 
+            return new ResultModel
+            {
+                IsSuccess = true,
+                Code = (int)HttpStatusCode.OK,
+                Message = "User retrieved successfully.",
+                Data = new
+                {
+                    user.UserId,
+                    user.UserName,
+                    user.Email,
+                    user.PhoneNumber,
+                    user.FullName,
+                    user.Address,
+                    user.Status,
+                    user.RoleId,
+                    user.CreatedAt,
+                    Gara = user.Garas != null ? user.Garas.Select(g => new
+                    {
+                        g.GaraId,
+                        g.GaraNumber,
+                        g.UserId
+                    }).ToList() : null
+                }
+            };
+
+        }
         public async Task<ResultModel> CreateUser(string token, CreateUserModel model)
         {
             var res = new ResultModel
@@ -159,15 +204,11 @@ namespace GaraMS.Service.Services.UserService
             }
             if (model.RoleId == 2)
             {
-                //int newEmployeeId = await GenerateEmployeeID();
-                //int newUserId = await GenerateID(); 
 
                 Employee newEmployee = new Employee
                 {
-                    //EmployeeId = newEmployeeId,
-                    //UserId = newUserId,
                     Salary = 0,
-                    SpecializedId = null 
+                    SpecializedId = null
                 };
 
                 await _userRepo.AddEmployeeAsync(newEmployee);
@@ -177,53 +218,54 @@ namespace GaraMS.Service.Services.UserService
             string hashedPassword = HashPass.HashPass.HashPassword(model.Password);
             var user = new User
             {
-                //UserId = await GenerateID(),
                 UserName = model.UserName,
                 Password = hashedPassword,
                 Email = model.Email,
                 PhoneNumber = model.PhoneNumber,
                 FullName = model.FullName,
                 Address = model.Address,
-                Status = true,
+                Status = model.RoleId == 1 ? false : true,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                RoleId = model.RoleId ?? 4
+                RoleId = model.RoleId ?? 3
             };
             await _userRepo.AddAsync(user);
             if (model.RoleId == 1)
             {
-                //int newCustomerId = await GenerateCustomerID();
-                //int newUserId = await GenerateID();
-
                 Customer newCustomer = new Customer
                 {
-                    //CustomerId = newCustomerId,
                     UserId = user.UserId,
                     Gender = "none",
                     Note = ""
                 };
-
+                //await _userRepo.UpdateAsync(user);
+                await SendStatusChangeEmail(user);
                 await _userRepo.AddCustomerAsync(newCustomer);
+            }
+            if (model.RoleId == 2)
+            {
+
+                Employee newEmployee = new Employee
+                {
+                    Salary = 0,
+                    SpecializedId = null,
+                    UserId = user.UserId
+                };
+
+                await _userRepo.AddEmployeeAsync(newEmployee);
             }
             if (model.RoleId == 3)
             {
-                //int newManagerId = await GenerateManagerID();
-                //int newUserId = await GenerateID();
 
                 Manager newManager = new Manager
                 {
-                    //ManagerId = newManagerId,
-                    //UserId = newUserId,
                     Salary = 0,
-                    Gender = "none"
+                    Gender = "none",
+                    UserId = user.UserId
                 };
 
                 await _userRepo.AddManagerAsync(newManager);
             }
-
-
-         
-
             return new ResultModel
             {
                 IsSuccess = true,
@@ -236,31 +278,263 @@ namespace GaraMS.Service.Services.UserService
                 }
             };
         }
+        private async Task SendStatusChangeEmail(User user)
+        {
+            var subject = "Wait for admin Accept Request";
+            var body = $@"
+<html>
+<head></head>
+<body>
+    <h2>Status Change Request</h2>
+    <p><strong>Hello {user.FullName},</strong></p>
+    <p>Wait for admin accept request</p>
+    <p>
+    </p>
+</body>
+</html>";
+
+            await _emailService.SendEmailAsync(user.Email, subject, body);
+        }
+
+        public async Task<ResultModel> ConfirmUserStatus(string token,int userId)
+        {
+            var res = new ResultModel
+            {
+                IsSuccess = true,
+                Code = (int)HttpStatusCode.OK,
+                Data = null,
+                Message = null,
+            };
+
+            var decodeModel = _token.decode(token);
+            var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 3, 4 });
+            if (!isValidRole)
+            {
+                res.IsSuccess = false;
+                res.Code = (int)HttpStatusCode.Forbidden;
+                res.Message = "You don't have permission to perform this action.";
+                return res;
+            }
+
+            var user = await _userRepo.GetLoginAsync(userId);
+            if (user == null)
+            {
+                return new ResultModel
+                {
+                    IsSuccess = false,
+                    Code = 404,
+                    Message = "User not found."
+                };
+            }
+
+            if ((bool)user.Status)
+            {
+                return new ResultModel
+                {
+                    IsSuccess = false,
+                    Code = 400,
+                    Message = "Account already confirmed."
+                };
+            }
+
+            user.Status = true;
+            await _userRepo.UpdateAsync(user);
+
+            return new ResultModel
+            {
+                IsSuccess = true,
+                Code = 200,
+                Message = "Account confirmed successfully!"
+            };
+        }
+
+        public async Task<ResultModel> GetFalseUser(string token)
+        {
+            var res = new ResultModel
+            {
+                IsSuccess = true,
+                Code = (int)HttpStatusCode.OK,
+                Data = null,
+                Message = null,
+            };
+
+            var decodeModel = _token.decode(token);
+            var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 3, 4 });
+            if (!isValidRole)
+            {
+                res.IsSuccess = false;
+                res.Code = (int)HttpStatusCode.Forbidden;
+                res.Message = "You don't have permission to perform this action.";
+                return res;
+            }
+
+            var falseUser = await _userRepo.GetFalseUser();
+            if (falseUser == null)
+            {
+                res.IsSuccess = false;
+                res.Code = (int)HttpStatusCode.NotFound;
+                res.Message = "No false user found.";
+                return res;
+            }
+
+            res.Data = falseUser;
+            res.Message = "False user retrieved successfully.";
+            return res;
+        }
+        public async Task<ResultModel> ChangePassword(string token, ChangePasswordModel model)
+        {
+            var res = new ResultModel
+            {
+                IsSuccess = true,
+                Code = (int)HttpStatusCode.OK,
+                Data = null,
+                Message = null,
+            };
+
+            var decodeModel = _token.decode(token);
+
+            var existingUser = await _userRepo.GetLoginAsync(int.Parse(decodeModel.userid));
+            bool isMatch = HashPass.HashPass.VerifyPassword(model.OldPassword, existingUser.Password);
+            if (!isMatch)
+            {
+                res.IsSuccess = false;
+                res.Code = 400;
+                res.Message = "Old password is wrong";
+                return res;
+            }
+            try
+            {
+
+                string hashNewPassword = HashPass.HashPass.HashPassword(model.NewPassword);
+                existingUser.Password = hashNewPassword;
+                await _userRepo.UpdateAsync(existingUser);
+
+                res.IsSuccess = true;
+                res.Code = 200;
+                res.Message = "Change password succesfully";
+                return res;
+            }
+            catch (Exception e)
+            {
+                res.IsSuccess = false;
+                res.Code = 400;
+                return res;
+            }
 
 
-        private async Task<int> GenerateID()
-        {
-            var userList = await _userRepo.GetAllUser();
-            int userLength = userList.Count() + 1;
-            return userLength;
+
         }
-        private async Task<int> GenerateEmployeeID()
+
+        public async Task<ResultModel> EditUser(string token, EditUserModel model)
         {
-            var userList = await _userRepo.GetAllEmployee();
-            int userLength = userList.Count() + 1;
-            return userLength;
+            var res = new ResultModel
+            {
+                IsSuccess = false,
+                Code = (int)HttpStatusCode.BadRequest,
+                Message = "Invalid request."
+            };
+
+            if (string.IsNullOrEmpty(token))
+            {
+                res.Message = "Token is required.";
+                return res;
+            }
+
+            var decodeModel = _token.decode(token);
+            if (decodeModel == null)
+            {
+                res.Code = (int)HttpStatusCode.Unauthorized;
+                res.Message = "Invalid token.";
+                return res;
+            }
+
+            var user = await _userRepo.GetLoginAsync(int.Parse(decodeModel.userid));
+            if (user == null)
+            {
+                res.Code = (int)HttpStatusCode.NotFound;
+                res.Message = "User not found.";
+                return res;
+            }
+
+            user.UserName = model.UserName ?? user.UserName;
+            user.Email = model.Email ?? user.Email;
+            user.FullName = model.FullName ?? user.FullName;
+            user.Address = model.Address ?? user.Address;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _userRepo.UpdateAsync(user);
+
+            res.IsSuccess = true;
+            res.Code = (int)HttpStatusCode.OK;
+            res.Message = "User updated successfully.";
+            res.Data = new
+            {
+                user.UserName,
+                user.Email,
+                user.FullName,
+                user.Address,
+                user.UpdatedAt
+            };
+
+            return res;
         }
-        private async Task<int> GenerateCustomerID()
+        public async Task<ResultModel> EditUserById(int id, EditUserModel model)
         {
-            var userList = await _userRepo.GetAllCustomer();
-            int userLength = userList.Count() + 1;
-            return userLength;
+            var res = new ResultModel
+            {
+                IsSuccess = false,
+                Code = (int)HttpStatusCode.BadRequest,
+                Message = "Invalid request."
+            };
+
+            
+
+            var user = await _userRepo.GetLoginAsync(id);
+            if (user == null)
+            {
+                res.Code = (int)HttpStatusCode.NotFound;
+                res.Message = "User not found.";
+                return res;
+            }
+
+            user.UserName = model.UserName ?? user.UserName;
+            user.Email = model.Email ?? user.Email;
+            user.FullName = model.FullName ?? user.FullName;
+            user.Address = model.Address ?? user.Address;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _userRepo.UpdateAsync(user);
+
+            res.IsSuccess = true;
+            res.Code = (int)HttpStatusCode.OK;
+            res.Message = "User updated successfully.";
+            res.Data = new
+            {
+                user.UserName,
+                user.Email,
+                user.FullName,
+                user.Address,
+                user.UpdatedAt
+            };
+
+            return res;
         }
-        private async Task<int> GenerateManagerID()
+        public async Task<ResultModel> GetAllAsync()
         {
-            var userList = await _userRepo.GetAllManager();
-            int userLength = userList.Count() + 1;
-            return userLength;
+            var res = new ResultModel
+            {
+                IsSuccess = false,
+                Code = (int)HttpStatusCode.BadRequest,
+                Message = "Invalid request."
+            };
+            var a = await _userRepo.GetAllUser();
+
+            res.IsSuccess = true;
+            res.Code = (int)HttpStatusCode.OK;
+            res.Message = "User updated successfully.";
+            res.Data = a;
+
+            return res;
         }
     }
 }

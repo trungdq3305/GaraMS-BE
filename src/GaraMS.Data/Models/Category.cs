@@ -2,20 +2,29 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace GaraMS.Data.Models;
 
 public partial class Category
 {
+    [Key]
     public int CategoryId { get; set; }
 
+    [Required]
+    [StringLength(100)]
     public string CategoryName { get; set; }
 
+    [Column(TypeName = "datetime")]
     public DateTime? CreatedAt { get; set; }
 
+    [Column(TypeName = "datetime")]
     public DateTime? UpdatedAt { get; set; }
 
     public bool? Status { get; set; }
 
+    [InverseProperty("Category")]
     public virtual ICollection<Service> Services { get; set; } = new List<Service>();
 }

@@ -20,5 +20,8 @@ namespace GaraMS.Data.Repositories.UserRepo
         Task<Customer> AddCustomerAsync(Customer customer);
         Task<Employee> AddEmployeeAsync(Employee employee);
         Task<Manager> AddManagerAsync(Manager manager);
+        Task UpdateAsync(User user);
+        public Task<User> GetFalseUser();
+        Task<int> GetCustomerIdByUserIdAsync(int userId);
     }
 }

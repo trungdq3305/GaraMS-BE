@@ -2,22 +2,34 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace GaraMS.Data.Models;
 
+[Index("PlateNumber", Name = "UQ__Vehicles__036926247006BD80", IsUnique = true)]
 public partial class Vehicle
 {
+    [Key]
     public int VehicleId { get; set; }
 
+    [Required]
+    [StringLength(20)]
     public string PlateNumber { get; set; }
 
+    [StringLength(50)]
     public string Brand { get; set; }
 
+    [StringLength(50)]
     public string Model { get; set; }
 
     public int? CustomerId { get; set; }
 
+    [InverseProperty("Vehicle")]
     public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 
+    [ForeignKey("CustomerId")]
+    [InverseProperty("Vehicles")]
     public virtual Customer Customer { get; set; }
 }

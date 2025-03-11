@@ -2,26 +2,43 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace GaraMS.Data.Models;
 
 public partial class Supplier
 {
+	public Supplier()
+	{
+		InventorySuppliers = new HashSet<InventorySupplier>();
+	}
+
+	[Key]
     public int SupplierId { get; set; }
 
+    [Required]
+    [StringLength(100)]
     public string Name { get; set; }
 
+    [StringLength(20)]
     public string Phone { get; set; }
 
+    [StringLength(100)]
     public string Email { get; set; }
 
+    [StringLength(255)]
     public string Address { get; set; }
 
     public bool? Status { get; set; }
 
+    [Column(TypeName = "datetime")]
     public DateTime? CreatedAt { get; set; }
 
+    [Column(TypeName = "datetime")]
     public DateTime? UpdatedAt { get; set; }
 
-    public virtual ICollection<InventorySupplier> InventorySuppliers { get; set; } = new List<InventorySupplier>();
+    [InverseProperty("Supplier")]
+    public virtual ICollection<InventorySupplier> InventorySuppliers { get; set; }
 }

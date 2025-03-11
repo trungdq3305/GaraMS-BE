@@ -10,6 +10,7 @@ using System.Text.Json.Serialization;
 using GaraMS.Service;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using GaraMS.Data;
+using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options =>
@@ -49,7 +50,7 @@ builder.Services.AddCors(options =>
                       });
 });
 builder.Services
-    .AddService()
+    .AddService(builder.Configuration)
     .AddRepository(builder.Configuration);
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
@@ -67,6 +68,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateLifetime = true,
         };
     });
+builder.Services.AddHttpClient();
 
 builder.Services.AddSwaggerGen(options =>
 {

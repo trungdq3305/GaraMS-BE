@@ -2,14 +2,22 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace GaraMS.Data.Models;
 
+[Table("AppointmentStatus")]
 public partial class AppointmentStatus
 {
+    [Key]
     public int AppointmentStatusId { get; set; }
 
+    [Required]
+    [StringLength(50)]
     public string StatusName { get; set; }
 
+    [InverseProperty("AppointmentStatus")]
     public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 }

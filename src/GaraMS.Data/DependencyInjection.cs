@@ -1,6 +1,12 @@
 ﻿using GaraMS.Data.Repositories.AppointmentRepo;
+using GaraMS.Data.Repositories.EmployeeRepo;
+using GaraMS.Data.Repositories.InventoryRepo;
+using GaraMS.Data.Repositories.PromotionRepo;
 using GaraMS.Data.Repositories.ServiceRepo;
+using GaraMS.Data.Repositories.SupplierRepo;
 using GaraMS.Data.Repositories.UserRepo;
+using GaraMS.Data.Repositories.VehicleRepo;
+using GaraMS.Data.Repository;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -19,7 +25,12 @@ namespace GaraMS.Data
             services.AddScoped<IUserRepo, UserRepo>();
 			services.AddScoped<IAppointmentRepo, AppointmentRepo>();
 			services.AddScoped<IServiceRepo, ServiceRepo>();
-			return services;
+            services.AddScoped<IVehicleRepo, VehicleRepo>();
+            services.AddScoped<IPromoRepo, PromoRepo>();
+            services.AddScoped<ISupplierRepo, SupplierRepo>();
+            services.AddScoped<IInventoryRepo, InventoryRepo>();
+            services.AddScoped<IEmployeeRepo, EmployeeRepo>();
+            return services;
         }
     }
 }

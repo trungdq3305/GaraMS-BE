@@ -1,13 +1,15 @@
 ﻿using GaraMS.Data.ViewModels;
-using GaraMS.Data.ViewModels.AppointmentDTO;
+using GaraMS.Data.ViewModels.AppointmentModel;
 using GaraMS.Service;
 using GaraMS.Service.Services.AppointmentService;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GaraMS.API.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
+	[Authorize]
 	public class AppointmentsController : ControllerBase
 	{
 		private readonly IAppointmentService _appointmentService;
@@ -20,58 +22,48 @@ namespace GaraMS.API.Controllers
 		[HttpGet]
 		public async Task<IActionResult> GetAllAppointments()
 		{
-			var result = await _appointmentService.GetAllAppointmentsAsync();
-			return Ok(result);
+			var token = Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+			var result = await _appointmentService.GetAllAppointmentsAsync(token);
+			return StatusCode(result.Code, result);
 		}
 
 		[HttpGet("{id}")]
 		public async Task<IActionResult> GetAppointmentById(int id)
 		{
-			var result = await _appointmentService.GetAppointmentByIdAsync(id);
-			if (result == null) return NotFound();
-			return Ok(result);
+			var token = Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+			var result = await _appointmentService.GetAppointmentByIdAsync(token, id);
+			return StatusCode(result.Code, result);
 		}
 
 		[HttpPost]
-		public async Task<IActionResult> CreateAppointment([FromBody] AppointmentDTO dto)
+		public async Task<IActionResult> CreateAppointment([FromBody] AppointmentModel model)
 		{
-			if (!ModelState.IsValid) return BadRequest(ModelState);
-
-			var result = await _appointmentService.CreateAppointmentAsync(dto);
-			return CreatedAtAction(nameof(GetAppointmentById), new { id = result.AppointmentId }, result);
+			var token = Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+			var result = await _appointmentService.CreateAppointmentAsync(token, model);
+			return StatusCode(result.Code, result);
 		}
 
 		[HttpPut("{id}")]
-		public async Task<IActionResult> UpdateAppointment(int id, [FromBody] AppointmentDTO dto)
+		public async Task<IActionResult> UpdateAppointment(int id, [FromBody] AppointmentModel model)
 		{
-			if (!ModelState.IsValid) return BadRequest(ModelState);
-
-			var success = await _appointmentService.UpdateAppointmentAsync(id, dto);
-			if (!success) return NotFound();
-
-			return NoContent();
+			var token = Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+			var result = await _appointmentService.UpdateAppointmentAsync(token, id, model);
+			return StatusCode(result.Code, result);
 		}
         [HttpPut("Status-Update/{id}")]
-        public async Task<IActionResult> UpdateAppointmentStatus(
-    int id,
-    [FromQuery] string status,
-    [FromQuery] string reason)
+        public async Task<IActionResult> UpdateAppointmentStatus(int id, [FromQuery] string status, [FromQuery] string reason)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-
-            var success = await _appointmentService.UpdateAppointmentStatusAsync(id, status, reason);
-            if (!success) return NotFound();
-
-            return NoContent();
-        }
+			var token = Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+			var result = await _appointmentService.UpdateAppointmentStatusAsync(token, id, status, reason);
+			return StatusCode(result.Code, result);
+		}
 
         [HttpDelete("{id}")]
 		public async Task<IActionResult> DeleteAppointment(int id)
 		{
-			var success = await _appointmentService.DeleteAppointmentAsync(id);
-			if (!success) return NotFound();
-
-			return NoContent();
+			var token = Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+			var result = await _appointmentService.DeleteAppointmentAsync(token, id);
+			return StatusCode(result.Code, result);
 		}
 	}
 }

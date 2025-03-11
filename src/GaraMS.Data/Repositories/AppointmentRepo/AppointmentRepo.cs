@@ -1,5 +1,6 @@
 ﻿using GaraMS.Data.Models;
-using GaraMS.Data.ViewModels.AppointmentDTO;
+using GaraMS.Data.ViewModels.AppointmentModel;
+using GaraMS.Data.ViewModels.AppointmentModel;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -17,25 +18,26 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
 		{
 			_context = context;
 		}
-		public async Task<Appointment> CreateAppointmentAsync(AppointmentDTO dto)
+
+		public async Task<Appointment> CreateAppointmentAsync(AppointmentModel model)
 		{
 			var appointment = new Appointment
 			{
-				Date = dto.Date,
-				Note = dto.Note,
+				Date = model.Date,
+				Note = model.Note,
 				Status = "Pending",
 				CreatedAt = DateTime.UtcNow,
 				UpdatedAt = DateTime.UtcNow,
-				VehicleId = dto.VehicleId
+				VehicleId = model.VehicleId
 			};
 
 			_context.Appointments.Add(appointment);
 			await _context.SaveChangesAsync();
 
 			// Adding services to the appointment
-			if (dto.ServiceIds.Any())
+			if (model.ServiceIds != null && model.ServiceIds.Any())
 			{
-				foreach (var serviceId in dto.ServiceIds)
+				foreach (var serviceId in model.ServiceIds)
 				{
 					_context.AppointmentServices.Add(new AppointmentService
 					{
@@ -48,21 +50,22 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
 			return appointment;
 		}
 
-		public async Task<bool> DeleteAppointmentAsync(int id)
+		public async Task<Appointment?> DeleteAppointmentAsync(int id)
 		{
 			var appointment = await _context.Appointments.FindAsync(id);
-			if (appointment == null) return false;
+			if (appointment == null) return null;
 
 			_context.Appointments.Remove(appointment);
 			await _context.SaveChangesAsync();
-			return true;
+			return appointment;
 		}
 
 		public async Task<List<Appointment>> GetAllAppointmentsAsync()
 		{
 			return await _context.Appointments
 				.Include(a => a.Vehicle)
-				.Include(a => a.AppointmentServices)
+				.ThenInclude(q=>q.Customer).ThenInclude(q => q.User)
+                .Include(a => a.AppointmentServices)
 				.ThenInclude(asv => asv.Service)
 				.ToListAsync();
 		}
@@ -76,37 +79,45 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
 				.FirstOrDefaultAsync(a => a.AppointmentId == id);
 		}
 
-		public async Task<bool> UpdateAppointmentAsync(int id, AppointmentDTO dto)
+		public async Task<Appointment?> UpdateAppointmentAsync(int id, AppointmentModel model)
 		{
 			var appointment = await _context.Appointments.FindAsync(id);
-			if (appointment == null) return false;
+			if (appointment == null) return null;
 
-			appointment.Date = dto.Date;
-			appointment.Note = dto.Note;
+			appointment.Date = model.Date;
+			appointment.Note = model.Note;
 			appointment.UpdatedAt = DateTime.UtcNow;
-			appointment.VehicleId = dto.VehicleId;
+			appointment.VehicleId = model.VehicleId;
 
 			_context.Appointments.Update(appointment);
 			await _context.SaveChangesAsync();
-			return true;
+			return appointment;
 		}
-        public async Task<bool> UpdateAppointmentStatusAsync(int id, string status, string reason)
-        {
-            var appointment = await _context.Appointments.FindAsync(id);
-            if (appointment == null) return false;
-            appointment.UpdatedAt = DateTime.UtcNow;
-			if(status == "Accept")
+
+		public async Task<Appointment?> UpdateAppointmentStatusAsync(int id, string status, string reason)
+		{
+			var appointment = await _context.Appointments.FindAsync(id);
+			if (appointment == null) return null;
+
+			appointment.UpdatedAt = DateTime.UtcNow;
+
+			if (status.Equals("Accept", StringComparison.OrdinalIgnoreCase))
 			{
 				appointment.Status = "Accept";
 			}
-            if (status == "Reject")
-            {
-                appointment.Status = "Reject";
+			else if (status.Equals("Reject", StringComparison.OrdinalIgnoreCase))
+			{
+				appointment.Status = "Reject";
 				appointment.RejectReason = reason;
-            }
-            _context.Appointments.Update(appointment);
-            await _context.SaveChangesAsync();
-            return true;
-        }
-    }
+			}
+			else
+			{
+				return null; // Invalid status input
+			}
+
+			_context.Appointments.Update(appointment);
+			await _context.SaveChangesAsync();
+			return appointment;
+		}
+	}
 }
