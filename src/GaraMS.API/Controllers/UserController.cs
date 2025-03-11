@@ -60,6 +60,27 @@ namespace GaraMS.API.Controllers
             var res = await _userService.EditUser(token, model);
             return StatusCode(res.Code, res);
         }
+        [HttpGet("get-by-id")]
+        public async Task<IActionResult> GetUserById(int id)
+        {
+            
+            var res = await _userService.GetUserById(id);
+            return Ok(res);
+        }
+        [HttpGet("get-all")]
+        public async Task<IActionResult> GetAll()
+        {
+
+            var res = await _userService.GetAllAsync();
+            return Ok(res);
+        }
+        [HttpPut("get-all")]
+        public async Task<IActionResult> GetAll(int id, EditUserModel model)
+        {
+
+            var res = await _userService.EditUserById(id,model);
+            return Ok(res);
+        }
 
     }
 }

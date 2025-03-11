@@ -15,5 +15,8 @@ namespace GaraMS.Data.Repositories.SupplierRepo
         Task<Supplier> CreateSupplierAsync(SupplierModel supplierModel);
         Task<Supplier> UpdateSupplierAsync(int id, SupplierModel supplierModel);
         Task<Supplier> DeleteSupplierAsync(int id);
-    }
+
+		Task<List<InventorySupplier>> GetAllInventorySuppliersAsync();
+		Task<bool> AssignInventoryToSupplierAsync(int inventoryId, int supplierId);
+	}
 }

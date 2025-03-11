@@ -17,5 +17,8 @@ namespace GaraMS.Service.Services.UserService
         Task<ResultModel> GetFalseUser(string token);
         Task<ResultModel> ChangePassword(string token, ChangePasswordModel model);
         Task<ResultModel> EditUser(string token, EditUserModel model);
+        Task<ResultModel> GetUserById(int id);
+        Task<ResultModel> EditUserById(int id, EditUserModel model);
+        Task<ResultModel> GetAllAsync();
     }
 }

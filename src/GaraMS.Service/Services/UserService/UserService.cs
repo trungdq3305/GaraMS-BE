@@ -108,7 +108,49 @@ namespace GaraMS.Service.Services.UserService
             };
 
         }
+        public async Task<ResultModel> GetUserById(int id)
+        {
+            
 
+            
+
+            var user = await _userRepo.GetLoginAsync(id);
+            if (user == null)
+            {
+                return new ResultModel
+                {
+                    IsSuccess = false,
+                    Code = (int)HttpStatusCode.NotFound,
+                    Message = "User not found."
+                };
+            }
+
+            return new ResultModel
+            {
+                IsSuccess = true,
+                Code = (int)HttpStatusCode.OK,
+                Message = "User retrieved successfully.",
+                Data = new
+                {
+                    user.UserId,
+                    user.UserName,
+                    user.Email,
+                    user.PhoneNumber,
+                    user.FullName,
+                    user.Address,
+                    user.Status,
+                    user.RoleId,
+                    user.CreatedAt,
+                    Gara = user.Garas != null ? user.Garas.Select(g => new
+                    {
+                        g.GaraId,
+                        g.GaraNumber,
+                        g.UserId
+                    }).ToList() : null
+                }
+            };
+
+        }
         public async Task<ResultModel> CreateUser(string token, CreateUserModel model)
         {
             var res = new ResultModel
@@ -433,6 +475,64 @@ namespace GaraMS.Service.Services.UserService
                 user.Address,
                 user.UpdatedAt
             };
+
+            return res;
+        }
+        public async Task<ResultModel> EditUserById(int id, EditUserModel model)
+        {
+            var res = new ResultModel
+            {
+                IsSuccess = false,
+                Code = (int)HttpStatusCode.BadRequest,
+                Message = "Invalid request."
+            };
+
+            
+
+            var user = await _userRepo.GetLoginAsync(id);
+            if (user == null)
+            {
+                res.Code = (int)HttpStatusCode.NotFound;
+                res.Message = "User not found.";
+                return res;
+            }
+
+            user.UserName = model.UserName ?? user.UserName;
+            user.Email = model.Email ?? user.Email;
+            user.FullName = model.FullName ?? user.FullName;
+            user.Address = model.Address ?? user.Address;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _userRepo.UpdateAsync(user);
+
+            res.IsSuccess = true;
+            res.Code = (int)HttpStatusCode.OK;
+            res.Message = "User updated successfully.";
+            res.Data = new
+            {
+                user.UserName,
+                user.Email,
+                user.FullName,
+                user.Address,
+                user.UpdatedAt
+            };
+
+            return res;
+        }
+        public async Task<ResultModel> GetAllAsync()
+        {
+            var res = new ResultModel
+            {
+                IsSuccess = false,
+                Code = (int)HttpStatusCode.BadRequest,
+                Message = "Invalid request."
+            };
+            var a = await _userRepo.GetAllUser();
+
+            res.IsSuccess = true;
+            res.Code = (int)HttpStatusCode.OK;
+            res.Message = "User updated successfully.";
+            res.Data = a;
 
             return res;
         }

@@ -66,5 +66,20 @@ namespace GaraMS.API.Controllers
 
 			return Ok(result);
 		}
+
+		[HttpGet("inventory-suppliers")]
+		public async Task<IActionResult> GetAllInventorySuppliers()
+		{
+			var result = await _supplierService.GetAllInventorySuppliersAsync();
+			return Ok(result);
+		}
+
+		[HttpPost("assign-inventory-to-supplier")]
+		public async Task<IActionResult> AssignInventoryToSupplier([FromBody] InventorySupplierModel model)
+		{
+			if (!ModelState.IsValid) return BadRequest(ModelState);
+			var result = await _supplierService.AssignInventoryToSupplierAsync(model);
+			return result.IsSuccess ? Ok(result) : BadRequest(result);
+		}
 	}
 }

@@ -85,7 +85,7 @@ namespace GaraMS.Service.Services.EmployeeService
                 {
                     IsSuccess = true,
                     Code = (int)HttpStatusCode.OK,
-                    Data = employeeModels,
+                    Data = employees,
                     Message = "Get all employees successfully"
                 };
             }
@@ -412,6 +412,11 @@ namespace GaraMS.Service.Services.EmployeeService
                     Message = $"Error getting employee services: {ex.Message}"
                 };
             }
+        }
+
+        public async Task<List<Specialized>> GetAllSpeAsync()
+        {
+            return await _employeeRepo.GetAllSpecializationsAsync();
         }
     }
 }

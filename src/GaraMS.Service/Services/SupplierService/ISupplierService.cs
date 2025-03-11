@@ -16,5 +16,8 @@ namespace GaraMS.Service.Services.SupplierService
 		Task<ResultModel> CreateSupplierAsync(string token, SupplierModel supplierModel);
 		Task<ResultModel> UpdateSupplierAsync(string token, int id, SupplierModel supplierModel);
 		Task<ResultModel> DeleteSupplierAsync(string token, int id);
+
+		Task<ResultModel> GetAllInventorySuppliersAsync();
+		Task<ResultModel> AssignInventoryToSupplierAsync(InventorySupplierModel model);
 	}
 }

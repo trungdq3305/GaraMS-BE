@@ -1,4 +1,5 @@
-﻿using GaraMS.Data.ViewModels.EmployeeModel;
+﻿using GaraMS.Data.Models;
+using GaraMS.Data.ViewModels.EmployeeModel;
 using GaraMS.Data.ViewModels.ResultModel;
 using System;
 using System.Collections.Generic;
@@ -19,5 +20,6 @@ namespace GaraMS.Service.Services.EmployeeService
         Task<ResultModel> AssignServiceToEmployeeAsync(string? token, int employeeId, int serviceId);
         Task<ResultModel> RemoveServiceFromEmployeeAsync(string? token, int employeeId, int serviceId);
         Task<ResultModel> GetEmployeeServicesAsync(string? token, int employeeId);
+        Task<List<Specialized>> GetAllSpeAsync();
     }
 }

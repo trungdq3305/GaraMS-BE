@@ -16,4 +16,10 @@ namespace GaraMS.Data.ViewModels
 
 		public string Email { get; set; }
 	}
+
+	public class InventorySupplierModel
+	{
+		public int InventoryId { get; set; }
+		public int SupplierId { get; set; }
+	}
 }
