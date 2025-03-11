@@ -16,6 +16,7 @@ using GaraMS.Service.Services.SupplierService;
 using GaraMS.Service.Services.InventoryService;
 using GaraMS.Service.Services.InvoicesService;
 using GaraMS.Service.Services.EmployeeService;
+using GaraMS.Service.Services.ReportService;
 
 namespace GaraMS.Service
 {
@@ -37,6 +38,7 @@ namespace GaraMS.Service
             services.AddScoped<IInventoryService, InventoryService>();
             services.AddScoped<IInvoicesService, InvoiceService>();
             services.AddScoped<IEmployeeService, EmployeeService>();
+            services.AddScoped<IReportService, ReportService>();
             services.AddSingleton(configuration);
             services.AddScoped<IEmailService, EmailService>(provider =>
             {
