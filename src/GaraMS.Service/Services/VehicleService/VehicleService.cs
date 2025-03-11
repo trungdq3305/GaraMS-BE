@@ -57,6 +57,22 @@ namespace GaraMS.Service.Services.VehicleService
 
                 return resultModel;
             }
+            if (!int.TryParse(decodeModel.userid, out int userId))
+            {
+                return res;
+            }
+            if (userId <= 0)
+            {
+                return res;
+            }
+            var customerId = await _userRepo.GetCustomerIdByUserIdAsync(userId);
+            var newVehicle = new Vehicle
+            {
+                PlateNumber = vehicle.PlateNumber,
+                Brand = vehicle.Brand,
+                Model = vehicle.Model,
+                CustomerId = customerId
+            };
 
             var createdVehicle = await _vehicleRepo.createVehicle(vehicle);
             if (createdVehicle == null)

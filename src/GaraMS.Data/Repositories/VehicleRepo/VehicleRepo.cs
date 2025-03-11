@@ -18,18 +18,12 @@ namespace GaraMS.Data.Repositories.VehicleRepo
             _context = context;
         }
 
-        public async Task<Vehicle> createVehicle(CreateVehicle vehicle)
+        public async Task<Vehicle> createVehicle(Vehicle vehicle)
         {
-            var newVehicle = new Vehicle
-            {
-                PlateNumber = vehicle.PlateNumber,
-                Brand = vehicle.Brand,
-                Model = vehicle.Model
-            };
 
-            await _context.Vehicles.AddAsync(newVehicle);
+            _context.Vehicles.Add(vehicle);
             await _context.SaveChangesAsync();
-            return newVehicle;
+            return vehicle;
         }
 
         public async Task<List<Vehicle>> GetVehicleByUserId(int id)

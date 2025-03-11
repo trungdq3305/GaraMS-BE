@@ -12,7 +12,7 @@ namespace GaraMS.Data.Repositories.VehicleRepo
     {
         public Task<List<Vehicle>> GetVehicleByUserId(int id);
         Task<Vehicle> searchVehicle(VehicleSearch vehicleSearch);
-        Task<Vehicle> createVehicle(CreateVehicle vehicle);
+        Task<Vehicle> createVehicle(Vehicle vehicle);
         Task<Vehicle> updateVehicle(EditVehicle vehicle);
     }
 }
