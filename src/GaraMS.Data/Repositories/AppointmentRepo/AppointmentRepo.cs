@@ -64,7 +64,8 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
 		{
 			return await _context.Appointments
 				.Include(a => a.Vehicle)
-				.Include(a => a.AppointmentServices)
+				.ThenInclude(q=>q.Customer).ThenInclude(q => q.User)
+                .Include(a => a.AppointmentServices)
 				.ThenInclude(asv => asv.Service)
 				.ToListAsync();
 		}
