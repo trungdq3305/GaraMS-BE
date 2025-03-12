@@ -1,4 +1,5 @@
 using GaraMS.Data.Models;
+using GaraMS.Data.Repositories.AppointmentRepo;
 using GaraMS.Service.Services.InvoicesService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,10 +14,12 @@ namespace GaraMS.API.Controllers
     public class InvoiceController : ControllerBase
     {
         private readonly IInvoicesService _invoiceService;
+        private readonly IAppointmentRepo _appointmentRepo;
         private readonly GaraManagementSystemContext _context;
 
-        public InvoiceController(IInvoicesService invoiceService, GaraManagementSystemContext context)
+        public InvoiceController(IAppointmentRepo appointmentRepo,IInvoicesService invoiceService, GaraManagementSystemContext context)
         {
+            _appointmentRepo = appointmentRepo;
             _invoiceService = invoiceService;
             _context = context;
         }
@@ -42,20 +45,17 @@ namespace GaraMS.API.Controllers
             return Ok(new { url = paymentUrl });
         }
 
-        [HttpGet("payment-success")]
-        public async Task<IActionResult> PaymentSuccess([FromQuery] string token, [FromQuery] string PayerID)
+        [HttpPost("payment-success")]
+        public async Task<IActionResult> PaymentSuccess([FromQuery] string token)
         {
             try
             {
-                // Lấy order ID từ token trong URL callback của PayPal
                 var response = await _invoiceService.CapturePayment(token);
 
                 if (response != null)
                 {
-                    // Lấy reference_id (invoiceId) từ response
                     var invoiceId = int.Parse(response.ReferenceId);
 
-                    // Cập nhật trạng thái invoice
                     var invoice = await _context.Invoices.FindAsync(invoiceId);
                     if (invoice != null)
                     {
@@ -64,25 +64,22 @@ namespace GaraMS.API.Controllers
                         await _context.SaveChangesAsync();
                     }
 
-                    // Chuyển hướng về trang thành công
-                    return Redirect($"https://localhost:3000/payment/success?invoiceId={invoiceId}");
+                    return Redirect($"http://localhost:3000/invoice/success");
                 }
             }
             catch (Exception ex)
             {
-                // Log lỗi và chuyển hướng về trang thất bại
                 Console.WriteLine($"Payment error: {ex.Message}");
-                return Redirect("https://localhost:3000/payment/error");
+                return Redirect("http://localhost:3000/invoice/fail");
             }
 
-            return Redirect("https://localhost:3000/payment/error");
+            return Redirect("http://localhost:3000/invoice/fail");
         }
 
         [HttpGet("payment-cancel")]
         public IActionResult PaymentCancel()
         {
-            // Chuyển hướng về trang hủy thanh toán
-            return Redirect("https://localhost:3000/payment/cancel");
+            return Redirect("http://localhost:3000/invoice/fail");
         }
     }
 }
