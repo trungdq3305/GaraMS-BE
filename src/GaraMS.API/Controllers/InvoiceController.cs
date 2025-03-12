@@ -61,6 +61,13 @@ namespace GaraMS.API.Controllers
                     {
                         invoice.Status = "Paid";
                         invoice.PaymentMethod = "PayPal";
+
+                        var appointment = await _context.Appointments.FindAsync(invoice.AppointmentId);
+                        if (appointment != null)
+                        {
+                            appointment.Status = "Paid";
+                        }
+
                         await _context.SaveChangesAsync();
                     }
 
