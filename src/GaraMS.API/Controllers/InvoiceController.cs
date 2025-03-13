@@ -71,7 +71,7 @@ namespace GaraMS.API.Controllers
                         await _context.SaveChangesAsync();
                     }
 
-                    return Redirect($"http://localhost:3000/invoice/success");
+                    return Redirect("http://localhost:3000/invoice/success");
                 }
             }
             catch (Exception ex)
