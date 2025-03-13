@@ -84,7 +84,7 @@ namespace GaraMS.Service.Services.AppointmentService
 
 		public async Task<ResultModel> GetAllAppointmentsAsync(string? token)
 		{
-			var validationResult = await ValidateToken(token, new List<int> { 3 });
+			var validationResult = await ValidateToken(token, new List<int> { 1, 3 });
 			if (!validationResult.IsSuccess)
 				return validationResult;
 
