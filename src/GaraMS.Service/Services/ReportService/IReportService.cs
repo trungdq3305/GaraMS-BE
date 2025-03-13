@@ -13,7 +13,8 @@ namespace GaraMS.Service.Services.ReportService
     {
         Task<ResultModel> GetAllReportsAsync(string? token);
         Task<ResultModel> GetReportByIdAsync(string? token, int id);
-        Task<ResultModel> GetReportsByCustomerAsync(string? token, int customerId);
+        Task<ResultModel> GetReportsByCustomerAsync(string? token);
+        Task<ResultModel> GetReportsByLoginAsync(string? token); 
         Task<ResultModel> CreateReportAsync(string? token, CreateReportModel model);
         Task<ResultModel> UpdateReportAsync(string? token, int id, UpdateReportModel model);
         Task<ResultModel> DeleteReportAsync(string? token, int id);

@@ -14,6 +14,7 @@ namespace GaraMS.Data.Repositories.ReportRepo
         Task<List<Report>> GetAllReportsAsync();
         Task<Report> GetReportByIdAsync(int id);
         Task<List<Report>> GetReportsByCustomerAsync(int customerId);
+        Task<List<Report>> GetReportsByLoginAsync(int userId);
         Task<Report> CreateReportAsync(Report report);
         Task<Report> UpdateReportAsync(Report report);
         Task<bool> DeleteReportAsync(int id);
