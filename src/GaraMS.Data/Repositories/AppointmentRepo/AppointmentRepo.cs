@@ -110,7 +110,12 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
 				appointment.Status = "Reject";
 				appointment.RejectReason = reason;
 			}
-			else
+            else if (status.Equals("Complete", StringComparison.OrdinalIgnoreCase))
+            {
+                appointment.Status = "Complete";
+                appointment.RejectReason = reason;
+            }
+            else
 			{
 				return null; // Invalid status input
 			}
