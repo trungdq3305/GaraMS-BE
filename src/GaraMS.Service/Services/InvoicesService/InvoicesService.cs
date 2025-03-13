@@ -156,7 +156,6 @@ namespace GaraMS.Service.Services.InvoicesService
                 var captureResult = await captureResponse.Content.ReadAsStringAsync();
                 var captureData = JsonSerializer.Deserialize<JsonElement>(captureResult);
 
-                // Lấy reference_id từ response
                 var purchaseUnit = captureData.GetProperty("purchase_units")[0];
                 var referenceId = purchaseUnit.GetProperty("reference_id").GetString();
                 var status = captureData.GetProperty("status").GetString();

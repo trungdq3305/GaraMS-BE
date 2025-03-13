@@ -46,13 +46,13 @@ namespace GaraMS.API.Controllers
         }
 
         [HttpPost("payment-success")]
-        public async Task<IActionResult> PaymentSuccess([FromQuery] string token)
+        public async Task<IActionResult> PaymentSuccess([FromQuery] string token, [FromQuery] string payerId)
         {
             try
             {
                 var response = await _invoiceService.CapturePayment(token);
 
-                if (response != null)
+                if (response != null && response.Status == "COMPLETED")
                 {
                     var invoiceId = int.Parse(response.ReferenceId);
 
