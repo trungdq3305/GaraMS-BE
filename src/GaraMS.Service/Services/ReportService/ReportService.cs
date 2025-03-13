@@ -1,9 +1,11 @@
 ﻿using GaraMS.Data.Models;
 using GaraMS.Data.Repositories.ReportRepo;
+using GaraMS.Data.Repositories.UserRepo;
 using GaraMS.Data.ViewModels.ReportModel;
 using GaraMS.Data.ViewModels.ResultModel;
 using GaraMS.Service.Services.AccountService;
 using GaraMS.Service.Services.TokenService;
+using GaraMS.Service.Services.UserService;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,11 +20,13 @@ namespace GaraMS.Service.Services.ReportService
         private readonly IReportRepo _reportRepo;
         private readonly IAccountService _accountService;
         private readonly ITokenService _tokenService;
-        public ReportService(IReportRepo reportRepo, IAccountService accountService, ITokenService tokenService)
+        private readonly IUserRepo _userRepo;
+        public ReportService(IReportRepo reportRepo, IAccountService accountService, ITokenService tokenService, IUserRepo userRepo)
         {
             _reportRepo = reportRepo;
             _accountService = accountService;
             _tokenService = tokenService;
+            _userRepo = userRepo;
         }
 
         private static ReportViewModel MapToViewModel(Report report)
@@ -102,7 +106,7 @@ namespace GaraMS.Service.Services.ReportService
 
         public async Task<ResultModel> GetReportByIdAsync(string? token, int id)
         {
-            var validationResult = await ValidateToken(token, new List<int> { 1, 2, 3 });
+            var validationResult = await ValidateToken(token, new List<int> { 2, 3 });
             if (!validationResult.IsSuccess)
                 return validationResult;
 
@@ -162,36 +166,61 @@ namespace GaraMS.Service.Services.ReportService
             }
         }
 
-        public async Task<ResultModel> GetReportsByCustomerAsync(string? token, int customerId)
+        public async Task<ResultModel> GetReportsByCustomerAsync(string? token)
         {
-            var validationResult = await ValidateToken(token, new List<int> { 1, 2, 3 });
+            var validationResult = await ValidateToken(token, new List<int> { 1 });
             if (!validationResult.IsSuccess)
-            {
                 return validationResult;
-            }
 
             try
             {
                 var decodeModel = _tokenService.decode(token);
-                if (decodeModel.role == "3" && customerId != int.Parse(decodeModel.userid))
+                if (!int.TryParse(decodeModel.userid, out int userId))
                 {
                     return new ResultModel
                     {
                         IsSuccess = false,
-                        Code = (int)HttpStatusCode.Forbidden,
-                        Message = "You can only view your own reports"
+                        Code = (int)HttpStatusCode.Unauthorized,
+                        Message = "Invalid user ID in token"
                     };
                 }
 
+                // Get the customer ID from the user ID, just like in VehicleService
+                var customerId = await _userRepo.GetCustomerIdByUserIdAsync(userId);
+                if (customerId == null || customerId <= 0)
+                {
+                    return new ResultModel
+                    {
+                        IsSuccess = false,
+                        Code = (int)HttpStatusCode.NotFound,
+                        Message = "Customer not found"
+                    };
+                }
+
+                // Get reports for the customer ID
+                Console.WriteLine($"Fetching reports for customer ID: {customerId}");
                 var reports = await _reportRepo.GetReportsByCustomerAsync(customerId);
-                var resultModels = reports.Select(MapToViewModel).ToList();
+                Console.WriteLine($"Found {reports?.Count} reports for customer ID: {customerId}");
+
+                if (reports == null || !reports.Any())
+                {
+                    return new ResultModel
+                    {
+                        IsSuccess = true,
+                        Code = (int)HttpStatusCode.OK,
+                        Data = new List<ReportViewModel>(),
+                        Message = "No reports found for customer"
+                    };
+                }
+
+                var reportModels = reports.Select(MapToViewModel).ToList();
 
                 return new ResultModel
                 {
                     IsSuccess = true,
                     Code = (int)HttpStatusCode.OK,
-                    Data = resultModels,
-                    Message = "Customer report retrieved successfully"
+                    Data = reportModels,
+                    Message = $"Found {reportModels.Count} reports for customer"
                 };
             }
             catch (Exception ex)
@@ -200,7 +229,7 @@ namespace GaraMS.Service.Services.ReportService
                 {
                     IsSuccess = false,
                     Code = (int)HttpStatusCode.InternalServerError,
-                    Message = $"Error retrieving customer report: {ex.Message}"
+                    Message = $"Error retrieving customer reports: {ex.Message}"
                 };
             }
         }
@@ -356,6 +385,78 @@ namespace GaraMS.Service.Services.ReportService
                     IsSuccess = false,
                     Code = (int)HttpStatusCode.InternalServerError,
                     Message = $"Error deleting report: {ex.Message}"
+                };
+            }
+        }
+
+        public async Task<ResultModel> GetReportsByLoginAsync(string? token)
+        {
+            var resultModel = new ResultModel
+            {
+                IsSuccess = true,
+                Code = (int)HttpStatusCode.OK,
+                Data = null,
+                Message = null,
+            };
+
+            var res = new ResultModel
+            {
+                IsSuccess = false,
+                Code = (int)HttpStatusCode.Unauthorized,
+                Message = "Invalid token."
+            };
+
+            var decodeModel = _tokenService.decode(token);
+            var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 1 });
+            if (!isValidRole)
+            {
+                resultModel.IsSuccess = false;
+                resultModel.Code = (int)HttpStatusCode.Forbidden;
+                resultModel.Message = "You don't have permission to perform this action.";
+                return resultModel;
+            }
+
+            if (!int.TryParse(decodeModel.userid, out int userId))
+            {
+                return res;
+            }
+
+            if (userId <= 0)
+            {
+                return res;
+            }
+
+            try
+            {
+                var customerId = await _userRepo.GetCustomerIdByUserIdAsync(userId);
+                if (customerId == null || customerId <= 0)
+                {
+                    resultModel.IsSuccess = false;
+                    resultModel.Code = (int)HttpStatusCode.NotFound;
+                    resultModel.Message = "Customer not found.";
+                    return resultModel;
+                }
+
+                var reports = await _reportRepo.GetReportsByCustomerAsync(customerId);
+                if (reports == null || !reports.Any())
+                {
+                    resultModel.Data = new List<ReportViewModel>();
+                    resultModel.Message = "No reports found.";
+                    return resultModel;
+                }
+
+                var reportModels = reports.Select(MapToViewModel).ToList();
+                resultModel.Data = reportModels;
+                resultModel.Message = "Reports retrieved successfully.";
+                return resultModel;
+            }
+            catch (Exception ex)
+            {
+                return new ResultModel
+                {
+                    IsSuccess = false,
+                    Code = (int)HttpStatusCode.InternalServerError,
+                    Message = $"Error retrieving reports: {ex.Message}"
                 };
             }
         }

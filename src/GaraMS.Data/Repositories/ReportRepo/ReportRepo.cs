@@ -37,10 +37,14 @@ namespace GaraMS.Data.Repositories.ReportRepo
         public async Task<List<Report>> GetReportsByCustomerAsync(int customerId)
         {
             return await _context.Reports
-                .Include(r => r.Customer)
-                    .ThenInclude(c => c.User)
                 .Where(r => r.CustomerId == customerId)
-                .OrderByDescending (r => r.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<List<Report>> GetReportsByLoginAsync(int userId)
+        {
+            return await _context.Reports
+                .Where(r => r.CustomerId == userId)
                 .ToListAsync();
         }
 
