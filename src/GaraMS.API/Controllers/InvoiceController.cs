@@ -67,7 +67,8 @@ namespace GaraMS.API.Controllers
                         {
                             appointment.Status = "Paid";
                         }
-
+                        _context.Invoices.Update(invoice);
+                        _context.Appointments.Update(appointment);
                         await _context.SaveChangesAsync();
                     }
 
