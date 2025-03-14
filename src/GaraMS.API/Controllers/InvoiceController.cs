@@ -88,5 +88,21 @@ namespace GaraMS.API.Controllers
         {
             return Redirect("http://localhost:3000/invoice/fail");
         }
+        [HttpGet("iid-by-aid")]
+        public async Task<IActionResult> GetIid(int aid)
+        {
+            
+                var invoice = await _context.Invoices
+                .Where(i => i.AppointmentId == aid)
+                .FirstOrDefaultAsync();
+                if (invoice != null)
+                {
+                return Ok();
+                }
+                var iid = invoice.InvoiceId;
+                return Ok(iid);
+            
+            
+        }
     }
 }
