@@ -38,6 +38,7 @@ namespace GaraMS.API.Controllers
             return StatusCode(res.Code, res);
         }
 
+        [AllowAnonymous]
         [HttpPost("confirm-status")]
         public async Task<IActionResult> ConfirmUserStatus(int userId)
         {
@@ -82,5 +83,51 @@ namespace GaraMS.API.Controllers
             return Ok(res);
         }
 
+        [AllowAnonymous]
+        [HttpPost("confirm-with-code")]
+        public async Task<IActionResult> ConfirmWithCode(string email, string code)
+        {
+            var res = await _userService.ConfirmWithCode(email, code);
+            return StatusCode(res.Code, res);
+        }
+
+        [AllowAnonymous]
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                return BadRequest("Email is required");
+            }
+
+            var res = await _userService.RequestPasswordReset(email);
+            return StatusCode(res.Code, res);
+        }
+
+        [AllowAnonymous]
+        [HttpPost("verify-reset-code")]
+        public async Task<IActionResult> VerifyResetCode(string email, string code)
+        {
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(code))
+            {
+                return BadRequest("Email and reset code are required");
+            }
+
+            var res = await _userService.VerifyResetCode(email, code);
+            return StatusCode(res.Code, res);
+        }
+
+        [AllowAnonymous]
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword(string email, string code, string newPassword)
+        {
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(code) || string.IsNullOrEmpty(newPassword))
+            {
+                return BadRequest("Email, reset code, and new password are required");
+            }
+
+            var res = await _userService.ResetPassword(email, code, newPassword);
+            return StatusCode(res.Code, res);
+        }
     }
 }
