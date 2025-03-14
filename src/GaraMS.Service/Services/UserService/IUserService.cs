@@ -24,5 +24,7 @@ namespace GaraMS.Service.Services.UserService
         Task<ResultModel> RequestPasswordReset(string email);
         Task<ResultModel> VerifyResetCode(string email, string code);
         Task<ResultModel> ResetPassword(string email, string code, string newPassword);
+        Task<ResultModel> RequestChangePassword(string token);
+
     }
 }
