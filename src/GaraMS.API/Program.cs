@@ -36,7 +36,11 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<GaraManagementSystemContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("ConnectionStringDB")));
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("ConnectionStringDB"));
+
+    options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+});
 builder.Services.AddControllers(options => options.SuppressAsyncSuffixInActionNames = false);
 
 // ✅ Register IAccountService in Dependency Injection (Fixes your issue)

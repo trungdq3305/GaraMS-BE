@@ -4,6 +4,7 @@ using GaraMS.Service.Services.InvoicesService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Text.Json;
 
@@ -56,32 +57,38 @@ namespace GaraMS.API.Controllers
                 {
                     var invoiceId = int.Parse(response.ReferenceId);
 
-                    var invoice = await _context.Invoices.FindAsync(invoiceId);
+                    var invoice = await _context.Invoices.Include(i=>i.Appointment)
+                        .ThenInclude(i => i.AppointmentServices)
+                        .ThenInclude(i => i.Service).Where(i => i.InvoiceId == invoiceId)
+                .FirstOrDefaultAsync();
                     if (invoice != null)
                     {
                         invoice.Status = "Paid";
                         invoice.PaymentMethod = "PayPal";
 
+                        _context.ChangeTracker.Clear();
                         var appointment = await _context.Appointments.FindAsync(invoice.AppointmentId);
                         if (appointment != null)
                         {
                             appointment.Status = "Paid";
+                            _context.Appointments.Update(appointment);
+                            await _context.SaveChangesAsync();
                         }
+                        _context.ChangeTracker.Clear();
                         _context.Invoices.Update(invoice);
-                        _context.Appointments.Update(appointment);
                         await _context.SaveChangesAsync();
                     }
 
-                    return Redirect("http://localhost:3000/invoice/success");
+                    return Ok(invoice);
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Payment error: {ex.Message}");
-                return Redirect("http://localhost:3000/invoice/fail");
+                return Ok(new { url ="fail" });
             }
 
-            return Redirect("http://localhost:3000/invoice/fail");
+            return Ok(new { url = "fail" });
         }
 
         [HttpGet("payment-cancel")]
@@ -96,7 +103,7 @@ namespace GaraMS.API.Controllers
                 var invoice = await _context.Invoices
                 .Where(i => i.AppointmentId == aid)
                 .FirstOrDefaultAsync();
-                if (invoice != null)
+                if (invoice == null)
                 {
                 return Ok();
                 }
