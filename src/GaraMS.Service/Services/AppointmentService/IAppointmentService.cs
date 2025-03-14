@@ -17,5 +17,6 @@ namespace GaraMS.Service.Services.AppointmentService
 		Task<ResultModel> UpdateAppointmentAsync(string? token, int id, AppointmentModel model);
 		Task<ResultModel> UpdateAppointmentStatusAsync(string? token, int id, string status, string reason);
 		Task<ResultModel> DeleteAppointmentAsync(string? token, int id);
-	}
+		Task<ResultModel> GetAppointmentByLogin(string? token, Appointment appointment);
+    }
 }

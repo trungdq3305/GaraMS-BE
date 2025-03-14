@@ -79,7 +79,17 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
 				.FirstOrDefaultAsync(a => a.AppointmentId == id);
 		}
 
-		public async Task<Appointment?> UpdateAppointmentAsync(int id, AppointmentModel model)
+        public async Task<List<Appointment>> GetAppointmentsByUserId(int customerid)
+        {
+            return await _context.Appointments
+                .Include(a => a.Vehicle)
+                .Include(a => a.AppointmentServices)
+                .ThenInclude(asv => asv.Service)
+                .Where(a => a.Vehicle.CustomerId == customerid)
+                .ToListAsync();
+        }
+
+        public async Task<Appointment?> UpdateAppointmentAsync(int id, AppointmentModel model)
 		{
 			var appointment = await _context.Appointments.FindAsync(id);
 			if (appointment == null) return null;
