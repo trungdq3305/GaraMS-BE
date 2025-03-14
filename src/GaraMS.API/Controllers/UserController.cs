@@ -135,5 +135,13 @@ namespace GaraMS.API.Controllers
             var res = await _userService.ResetPassword(email, code, newPassword);
             return StatusCode(res.Code, res);
         }
+
+        [HttpPost("request-change-password")]
+        public async Task<IActionResult> RequestChangePassword()
+        {
+            string token = Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+            var res = await _userService.RequestChangePassword(token);
+            return StatusCode(res.Code, res);
+        }
     }
 }
