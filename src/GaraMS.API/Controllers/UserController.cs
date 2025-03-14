@@ -46,8 +46,14 @@ namespace GaraMS.API.Controllers
             var res = await _userService.ConfirmUserStatus(token, userId);
             return StatusCode(res.Code, res);
         }
-        [HttpPut]
-        [Route("change-password")]
+        [HttpPost("request-change-password")]
+        public async Task<IActionResult> RequestChangePassword()
+        {
+            string token = Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+            var res = await _userService.RequestChangePassword(token);
+            return StatusCode(res.Code, res);
+        }
+        [HttpPut("change-password")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordModel model)
         {
             string token = Request.Headers["Authorization"].ToString().Split(" ")[1];

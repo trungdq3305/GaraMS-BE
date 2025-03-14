@@ -413,44 +413,81 @@ namespace GaraMS.Service.Services.UserService
         {
             var res = new ResultModel
             {
-                IsSuccess = true,
-                Code = (int)HttpStatusCode.OK,
-                Data = null,
-                Message = null,
+                IsSuccess = false,
+                Code = 400,
+                Message = "Invalid request."
             };
 
+            if (string.IsNullOrEmpty(token))
+            {
+                res.Message = "Authentication required.";
+                return res;
+            }
+
+            if (string.IsNullOrEmpty(model.OldPassword) || string.IsNullOrEmpty(model.NewPassword) || string.IsNullOrEmpty(model.ConfirmationCode))
+            {
+                res.Message = "Old password, new password, and confirmation code are required.";
+                return res;
+            }
+
             var decodeModel = _token.decode(token);
+            if (decodeModel == null || string.IsNullOrEmpty(decodeModel.userid))
+            {
+                res.Code = 401;
+                res.Message = "Invalid token.";
+                return res;
+            }
 
             var existingUser = await _userRepo.GetLoginAsync(int.Parse(decodeModel.userid));
+            if (existingUser == null)
+            {
+                res.Code = 404;
+                res.Message = "User not found.";
+                return res;
+            }
+
+            // Verify old password
             bool isMatch = HashPass.HashPass.VerifyPassword(model.OldPassword, existingUser.Password);
             if (!isMatch)
             {
-                res.IsSuccess = false;
-                res.Code = 400;
-                res.Message = "Old password is wrong";
+                res.Message = "Old password is incorrect.";
                 return res;
             }
+
+            // Verify confirmation code
+            if (existingUser.Address == null || !existingUser.Address.Contains($"|PWCHANGE:{model.ConfirmationCode}"))
+            {
+                res.Message = "Invalid confirmation code.";
+                return res;
+            }
+
             try
             {
-
+                // Hash the new password
                 string hashNewPassword = HashPass.HashPass.HashPassword(model.NewPassword);
                 existingUser.Password = hashNewPassword;
+                
+                // Remove the confirmation code from the address
+                existingUser.Address = existingUser.Address.Split("|")[0];
+                
                 await _userRepo.UpdateAsync(existingUser);
 
-                res.IsSuccess = true;
-                res.Code = 200;
-                res.Message = "Change password succesfully";
-                return res;
+                return new ResultModel
+                {
+                    IsSuccess = true,
+                    Code = 200,
+                    Message = "Password changed successfully."
+                };
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                res.IsSuccess = false;
-                res.Code = 400;
-                return res;
+                return new ResultModel
+                {
+                    IsSuccess = false,
+                    Code = 500,
+                    Message = $"An error occurred: {ex.Message}"
+                };
             }
-
-
-
         }
 
         public async Task<ResultModel> EditUser(string token, EditUserModel model)
@@ -869,6 +906,94 @@ namespace GaraMS.Service.Services.UserService
             catch (Exception ex)
             {
                 Console.WriteLine($"Error in ResetPassword: {ex.Message}");
+                return new ResultModel
+                {
+                    IsSuccess = false,
+                    Code = 500,
+                    Message = $"An error occurred: {ex.Message}"
+                };
+            }
+        }
+
+        public async Task<ResultModel> RequestChangePassword(string token)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(token))
+                {
+                    return new ResultModel
+                    {
+                        IsSuccess = false,
+                        Code = 401,
+                        Message = "Authentication required."
+                    };
+                }
+
+                var decodeModel = _token.decode(token);
+                if (decodeModel == null || string.IsNullOrEmpty(decodeModel.userid))
+                {
+                    return new ResultModel
+                    {
+                        IsSuccess = false,
+                        Code = 401,
+                        Message = "Invalid token."
+                    };
+                }
+
+                var userId = int.Parse(decodeModel.userid);
+                var user = await _userRepo.GetLoginAsync(userId);
+                if (user == null)
+                {
+                    return new ResultModel
+                    {
+                        IsSuccess = false,
+                        Code = 404,
+                        Message = "User not found."
+                    };
+                }
+
+                // Generate a random 6-digit confirmation code
+                Random random = new Random();
+                string confirmationCode = random.Next(100000, 999999).ToString();
+                
+                // Store the confirmation code in the user's address field
+                string addressBase = user.Address ?? "";
+                
+                // Remove any existing codes
+                if (addressBase.Contains("|"))
+                {
+                    addressBase = addressBase.Split("|")[0];
+                }
+                
+                // Add the new confirmation code
+                user.Address = $"{addressBase}|PWCHANGE:{confirmationCode}";
+                
+                await _userRepo.UpdateAsync(user);
+                
+                // Send the confirmation code via email
+                string subject = "Password Change Confirmation - GaraMS";
+                string body = $@"
+                    <h2>Password Change Confirmation</h2>
+                    <p>Hello {user.FullName},</p>
+                    <p>You have requested to change your password. Your confirmation code is:</p>
+                    <h1 style='text-align: center; font-size: 32px; letter-spacing: 5px; padding: 10px; background-color: #f0f0f0; border-radius: 5px;'>{confirmationCode}</h1>
+                    <p>Please enter this code in the application to confirm your password change.</p>
+                    <p>This code will expire in 1 hour.</p>
+                    <p>If you didn't request this password change, please secure your account immediately.</p>
+                    <p>Thank you,<br>GaraMS Team</p>
+                ";
+                
+                await _emailService.SendEmailAsync(user.Email, subject, body);
+                
+                return new ResultModel
+                {
+                    IsSuccess = true,
+                    Code = 200,
+                    Message = "Confirmation code sent to your email."
+                };
+            }
+            catch (Exception ex)
+            {
                 return new ResultModel
                 {
                     IsSuccess = false,
