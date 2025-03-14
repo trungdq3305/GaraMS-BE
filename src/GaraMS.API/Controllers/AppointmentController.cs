@@ -1,4 +1,5 @@
-﻿using GaraMS.Data.ViewModels;
+﻿using GaraMS.Data.Models;
+using GaraMS.Data.ViewModels;
 using GaraMS.Data.ViewModels.AppointmentModel;
 using GaraMS.Service;
 using GaraMS.Service.Services.AppointmentService;
@@ -65,5 +66,12 @@ namespace GaraMS.API.Controllers
 			var result = await _appointmentService.DeleteAppointmentAsync(token, id);
 			return StatusCode(result.Code, result);
 		}
-	}
+        [HttpGet("ViewVehiclebyLogin")]
+        public async Task<ActionResult> ViewVehiclebyLogin()
+        {
+            string? token = Request.Headers["Authorization"].ToString().Split(" ")[1];
+            var res = await _appointmentService.GetAppointmentByLogin(token, new Appointment());
+            return StatusCode(res.Code, res);
+        }
+    }
 }

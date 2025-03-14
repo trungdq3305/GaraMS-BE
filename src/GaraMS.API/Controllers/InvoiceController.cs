@@ -46,13 +46,13 @@ namespace GaraMS.API.Controllers
         }
 
         [HttpPost("payment-success")]
-        public async Task<IActionResult> PaymentSuccess([FromQuery] string token)
+        public async Task<IActionResult> PaymentSuccess([FromQuery] string token, [FromQuery] string payerId)
         {
             try
             {
                 var response = await _invoiceService.CapturePayment(token);
 
-                if (response != null)
+                if (response != null && response.Status == "COMPLETED")
                 {
                     var invoiceId = int.Parse(response.ReferenceId);
 
@@ -67,11 +67,12 @@ namespace GaraMS.API.Controllers
                         {
                             appointment.Status = "Paid";
                         }
-
+                        _context.Invoices.Update(invoice);
+                        _context.Appointments.Update(appointment);
                         await _context.SaveChangesAsync();
                     }
 
-                    return Redirect($"http://localhost:3000/invoice/success");
+                    return Redirect("http://localhost:3000/invoice/success");
                 }
             }
             catch (Exception ex)

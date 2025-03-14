@@ -76,8 +76,8 @@ namespace GaraMS.Service.Services.InvoicesService
                         brand_name = "Gara Management System",
                         landing_page = "LOGIN",
                         user_action = "PAY_NOW",
-                        return_url = "https://localhost:5001/api/invoices/payment-success",
-                        cancel_url = "https://localhost:5001/api/invoices/payment-cancel"
+                        return_url = "http://localhost:3000/invoice/success",
+                        cancel_url = "http://localhost:3000/invoice/fail"
                     }
                 };
 
@@ -156,7 +156,6 @@ namespace GaraMS.Service.Services.InvoicesService
                 var captureResult = await captureResponse.Content.ReadAsStringAsync();
                 var captureData = JsonSerializer.Deserialize<JsonElement>(captureResult);
 
-                // Lấy reference_id từ response
                 var purchaseUnit = captureData.GetProperty("purchase_units")[0];
                 var referenceId = purchaseUnit.GetProperty("reference_id").GetString();
                 var status = captureData.GetProperty("status").GetString();
