@@ -76,8 +76,8 @@ namespace GaraMS.Service.Services.InvoicesService
                         brand_name = "Gara Management System",
                         landing_page = "LOGIN",
                         user_action = "PAY_NOW",
-                        return_url = "http://localhost:3000/invoice/success",
-                        cancel_url = "http://localhost:3000/invoice/fail"
+                        return_url = "https://localhost:7102/api/invoices/verify-payment",
+                        cancel_url = "https://localhost:7102/api/invoices/payment-cancel"
                     }
                 };
 
@@ -148,17 +148,23 @@ namespace GaraMS.Service.Services.InvoicesService
 
                 var captureResponse = await _httpClient.PostAsync($"https://api-m.sandbox.paypal.com/v2/checkout/orders/{token}/capture", new StringContent("", Encoding.UTF8, "application/json"));
                 
+                var captureResult = await captureResponse.Content.ReadAsStringAsync();
+                Console.WriteLine($"Capture response: {captureResult}");
+
                 if (!captureResponse.IsSuccessStatusCode)
                 {
-                    throw new InvalidOperationException("Failed to capture payment");
+                    Console.WriteLine($"Failed to capture payment. Status: {captureResponse.StatusCode}");
+                    throw new InvalidOperationException($"Failed to capture payment: {captureResult}");
                 }
 
-                var captureResult = await captureResponse.Content.ReadAsStringAsync();
                 var captureData = JsonSerializer.Deserialize<JsonElement>(captureResult);
+                Console.WriteLine($"Capture data: {JsonSerializer.Serialize(captureData)}");
 
                 var purchaseUnit = captureData.GetProperty("purchase_units")[0];
                 var referenceId = purchaseUnit.GetProperty("reference_id").GetString();
                 var status = captureData.GetProperty("status").GetString();
+
+                Console.WriteLine($"Final status: {status}, ReferenceId: {referenceId}");
 
                 return new PaymentResponse
                 {

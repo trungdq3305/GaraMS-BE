@@ -1,4 +1,4 @@
-using GaraMS.Data.Models;
+﻿using GaraMS.Data.Models;
 using GaraMS.Data.Repositories.AppointmentRepo;
 using GaraMS.Service.Services.InvoicesService;
 using Microsoft.AspNetCore.Authorization;
@@ -16,13 +16,15 @@ namespace GaraMS.API.Controllers
     {
         private readonly IInvoicesService _invoiceService;
         private readonly IAppointmentRepo _appointmentRepo;
+        private readonly IConfiguration _config;
         private readonly GaraManagementSystemContext _context;
 
-        public InvoiceController(IAppointmentRepo appointmentRepo,IInvoicesService invoiceService, GaraManagementSystemContext context)
+        public InvoiceController(IAppointmentRepo appointmentRepo,IInvoicesService invoiceService, GaraManagementSystemContext context, IConfiguration config)
         {
             _appointmentRepo = appointmentRepo;
             _invoiceService = invoiceService;
             _context = context;
+            _config = config;
         }
 
         [HttpPost("pay-single-invoice/{invoiceId}")]
@@ -45,57 +47,6 @@ namespace GaraMS.API.Controllers
             var paymentUrl = await _invoiceService.CreatePaymentUrl(invoiceId, invoice.TotalAmount.Value);
             return Ok(new { url = paymentUrl });
         }
-
-        [HttpPost("payment-success")]
-        public async Task<IActionResult> PaymentSuccess([FromQuery] string token, [FromQuery] string payerId)
-        {
-            try
-            {
-                var response = await _invoiceService.CapturePayment(token);
-
-                if (response != null && response.Status == "COMPLETED")
-                {
-                    var invoiceId = int.Parse(response.ReferenceId);
-
-                    var invoice = await _context.Invoices.Include(i=>i.Appointment)
-                        .ThenInclude(i => i.AppointmentServices)
-                        .ThenInclude(i => i.Service).Where(i => i.InvoiceId == invoiceId)
-                .FirstOrDefaultAsync();
-                    if (invoice != null)
-                    {
-                        invoice.Status = "Paid";
-                        invoice.PaymentMethod = "PayPal";
-
-                        _context.ChangeTracker.Clear();
-                        var appointment = await _context.Appointments.FindAsync(invoice.AppointmentId);
-                        if (appointment != null)
-                        {
-                            appointment.Status = "Paid";
-                            _context.Appointments.Update(appointment);
-                            await _context.SaveChangesAsync();
-                        }
-                        _context.ChangeTracker.Clear();
-                        _context.Invoices.Update(invoice);
-                        await _context.SaveChangesAsync();
-                    }
-
-                    return Ok(invoice);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Payment error: {ex.Message}");
-                return Ok(new { url ="fail" });
-            }
-
-            return Ok(new { url = "fail" });
-        }
-
-        [HttpGet("payment-cancel")]
-        public IActionResult PaymentCancel()
-        {
-            return Redirect("http://localhost:3000/invoice/fail");
-        }
         [HttpGet("iid-by-aid")]
         public async Task<IActionResult> GetIid(int aid)
         {
@@ -111,6 +62,112 @@ namespace GaraMS.API.Controllers
                 return Ok(iid);
             
             
+        }
+        [HttpGet("verify-payment")]
+        public async Task<IActionResult> VerifyPayment([FromQuery] string token, [FromQuery] string PayerID)
+        {
+            try
+            {
+                Console.WriteLine($"Starting verify-payment with token: {token}, PayerID: {PayerID}");
+
+                // Kiểm tra trạng thái order
+                var clientId = _config["PayPal:ClientId"];
+                var secret = _config["PayPal:Secret"];
+                var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{clientId}:{secret}"));
+
+                using (var httpClient = new HttpClient())
+                {
+                    httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", auth);
+
+                    // Lấy access token
+                    var tokenContent = new StringContent("grant_type=client_credentials", Encoding.UTF8, "application/x-www-form-urlencoded");
+                    var tokenResponse = await httpClient.PostAsync("https://api-m.sandbox.paypal.com/v1/oauth2/token", tokenContent);
+                    var tokenResult = await tokenResponse.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Token response: {tokenResult}");
+
+                    var tokenData = JsonSerializer.Deserialize<JsonElement>(tokenResult);
+                    var accessToken = tokenData.GetProperty("access_token").GetString();
+
+                    // Kiểm tra trạng thái order
+                    httpClient.DefaultRequestHeaders.Clear();
+                    httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+                    var orderResponse = await httpClient.GetAsync($"https://api-m.sandbox.paypal.com/v2/checkout/orders/{token}");
+                    var orderResult = await orderResponse.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Order response: {orderResult}");
+
+                    var orderData = JsonSerializer.Deserialize<JsonElement>(orderResult);
+
+                    if (!orderData.TryGetProperty("status", out var status))
+                    {
+                        Console.WriteLine("Status not found in order response");
+                        return Ok(new { success = false, redirectUrl = "http://localhost:3000/invoice/fail" });
+                    }
+
+                    var orderStatus = status.GetString();
+                    Console.WriteLine($"Order status: {orderStatus}");
+
+                    // Chỉ kiểm tra CREATED, cho phép các trạng thái khác
+                    if (orderStatus == "CREATED")
+                    {
+                        Console.WriteLine("Payment not completed: Order still in CREATED state");
+                        return Ok(new { success = false, redirectUrl = "http://localhost:3000/invoice/fail" });
+                    }
+
+                    try
+                    {
+                        Console.WriteLine("Attempting to capture payment...");
+                        var response = await _invoiceService.CapturePayment(token);
+                        Console.WriteLine($"Capture payment response: {JsonSerializer.Serialize(response)}");
+
+                        if (response != null)
+                        {
+                            var invoiceId = int.Parse(response.ReferenceId);
+                            Console.WriteLine($"Processing invoice ID: {invoiceId}");
+
+                            var invoice = await _context.Invoices
+                                .Include(i => i.Appointment)
+                                .Where(i => i.InvoiceId == invoiceId)
+                                .FirstOrDefaultAsync();
+
+                            if (invoice != null)
+                            {
+                                invoice.Status = "Paid";
+                                invoice.PaymentMethod = "PayPal";
+
+                                if (invoice.Appointment != null)
+                                {
+                                    invoice.Appointment.Status = "Paid";
+                                }
+
+                                await _context.SaveChangesAsync();
+                                Console.WriteLine($"Successfully updated invoice {invoiceId} and appointment");
+                                return Ok(new { success = true, redirectUrl = "http://localhost:3000/invoice/success" });
+                            }
+                            else
+                            {
+                                Console.WriteLine($"Invoice not found for ID: {invoiceId}");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("Capture payment response is null");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error during capture or database update: {ex.Message}");
+                        Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                    }
+
+                    return Ok(new { success = false, redirectUrl = "http://localhost:3000/invoice/fail" });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in verify-payment: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                return Ok(new { success = false, redirectUrl = "http://localhost:3000/invoice/fail" });
+            }
         }
     }
 }
