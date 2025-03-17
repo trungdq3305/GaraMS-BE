@@ -63,7 +63,7 @@ namespace GaraMS.API.Controllers
             
             
         }
-        [HttpPost("verify-payment")]
+        [HttpPost("payment-success")]
         public async Task<IActionResult> VerifyPayment([FromQuery] string token, [FromQuery] string PayerID)
         {
             try
