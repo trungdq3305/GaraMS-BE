@@ -63,7 +63,7 @@ namespace GaraMS.API.Controllers
             
             
         }
-        [HttpGet("verify-payment")]
+        [HttpPost("verify-payment")]
         public async Task<IActionResult> VerifyPayment([FromQuery] string token, [FromQuery] string PayerID)
         {
             try
@@ -106,7 +106,6 @@ namespace GaraMS.API.Controllers
                     var orderStatus = status.GetString();
                     Console.WriteLine($"Order status: {orderStatus}");
 
-                    // Chỉ kiểm tra CREATED, cho phép các trạng thái khác
                     if (orderStatus == "CREATED")
                     {
                         Console.WriteLine("Payment not completed: Order still in CREATED state");
@@ -138,7 +137,8 @@ namespace GaraMS.API.Controllers
                                 {
                                     invoice.Appointment.Status = "Paid";
                                 }
-
+                                _context.Invoices.Update(invoice);
+                                _context.Appointments.Update(invoice.Appointment);
                                 await _context.SaveChangesAsync();
                                 Console.WriteLine($"Successfully updated invoice {invoiceId} and appointment");
                                 return Ok(new { success = true, redirectUrl = "http://localhost:3000/invoice/success" });

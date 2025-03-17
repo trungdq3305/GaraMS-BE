@@ -76,8 +76,8 @@ namespace GaraMS.Service.Services.InvoicesService
                         brand_name = "Gara Management System",
                         landing_page = "LOGIN",
                         user_action = "PAY_NOW",
-                        return_url = "https://localhost:7102/api/invoices/verify-payment",
-                        cancel_url = "https://localhost:7102/api/invoices/payment-cancel"
+                        return_url = "https://localhost:3000/invoices/success",
+                        cancel_url = "https://localhost:3000/invoices/fail"
                     }
                 };
 
@@ -142,7 +142,6 @@ namespace GaraMS.Service.Services.InvoicesService
                 var tokenData = JsonSerializer.Deserialize<JsonElement>(tokenResult);
                 var accessToken = tokenData.GetProperty("access_token").GetString();
 
-                // Capture the payment
                 _httpClient.DefaultRequestHeaders.Clear();
                 _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
