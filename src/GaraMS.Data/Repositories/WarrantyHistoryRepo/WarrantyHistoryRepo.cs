@@ -22,8 +22,6 @@ namespace GaraMS.Data.Repositories.WarrantyHistoryRepo
 		{
 			var warranty = new WarrantyHistory
 			{
-				StartDay = model.StartDay,
-				EndDay = model.EndDay,
 				Note = model.Note,
 				Status = model.Status,
 				ServiceId = model.ServiceId
