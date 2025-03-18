@@ -125,6 +125,9 @@ namespace GaraMS.API.Controllers
 
                             var invoice = await _context.Invoices
                                 .Include(i => i.Appointment)
+                                .ThenInclude(i => i.AppointmentServices)
+                                .ThenInclude(i => i.Service)
+                                .Include(i => i.Customer)
                                 .Where(i => i.InvoiceId == invoiceId)
                                 .FirstOrDefaultAsync();
 
@@ -141,7 +144,7 @@ namespace GaraMS.API.Controllers
                                 _context.Appointments.Update(invoice.Appointment);
                                 await _context.SaveChangesAsync();
                                 Console.WriteLine($"Successfully updated invoice {invoiceId} and appointment");
-                                return Ok(new { success = true, redirectUrl = "http://localhost:3000/invoice/success" });
+                                return Ok(invoice);
                             }
                             else
                             {
