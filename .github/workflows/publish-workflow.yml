@@ -5,8 +5,8 @@ on:
     branches: [ master ]
     
 env:
-  AZURE_CONTAINER_REGISTRY: garams
-  CONTAINER_APP_NAME: garams
+  AZURE_CONTAINER_REGISTRY: garamsapi
+  CONTAINER_APP_NAME: garamsapi
   RESOURCE_GROUP: group01
 jobs:
   build:
