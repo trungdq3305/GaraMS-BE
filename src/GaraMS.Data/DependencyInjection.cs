@@ -2,6 +2,7 @@
 using GaraMS.Data.Repositories.EmployeeRepo;
 using GaraMS.Data.Repositories.InventoryRepo;
 using GaraMS.Data.Repositories.PromotionRepo;
+using GaraMS.Data.Repositories.ReportRepo;
 using GaraMS.Data.Repositories.ServiceRepo;
 using GaraMS.Data.Repositories.SupplierRepo;
 using GaraMS.Data.Repositories.UserRepo;
@@ -30,6 +31,7 @@ namespace GaraMS.Data
             services.AddScoped<ISupplierRepo, SupplierRepo>();
             services.AddScoped<IInventoryRepo, InventoryRepo>();
             services.AddScoped<IEmployeeRepo, EmployeeRepo>();
+            services.AddScoped<IReportRepo, ReportRepo>();
             return services;
         }
     }

@@ -9,5 +9,12 @@ namespace GaraMS.Service.Services.InvoicesService
     public interface IInvoicesService
     {
         public Task<string> CreatePaymentUrl(int invoiceId, decimal totalAmount);
+        public Task<PaymentResponse> CapturePayment(string token);
+    }
+
+    public class PaymentResponse
+    {
+        public string ReferenceId { get; set; }
+        public string Status { get; set; }
     }
 }

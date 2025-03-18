@@ -106,7 +106,7 @@ namespace GaraMS.Service.Services.PromotionService
             };
 
             var decodeModel = _token.decode(token);
-            var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 3 });
+            var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 1,3 });
             if (!isValidRole)
             {
                 resultModel.IsSuccess = false;

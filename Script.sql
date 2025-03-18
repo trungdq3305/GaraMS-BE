@@ -226,7 +226,7 @@ BEGIN
     SELECT @AppointmentId = inserted.AppointmentId
     FROM inserted
     JOIN deleted ON inserted.AppointmentId = deleted.AppointmentId
-    WHERE inserted.Status = 'Accepted' AND deleted.Status <> 'Accepted';
+    WHERE inserted.Status = 'Accept' AND deleted.Status <> 'Accept';
     IF @AppointmentId IS NOT NULL
     BEGIN
 

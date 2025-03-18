@@ -1,5 +1,6 @@
 ﻿using GaraMS.Data.Models;
 using GaraMS.Data.Repositories.AppointmentRepo;
+using GaraMS.Data.Repositories.UserRepo;
 using GaraMS.Data.ViewModels.AppointmentModel;
 using GaraMS.Data.ViewModels.ResultModel;
 using GaraMS.Service.Services.AccountService;
@@ -15,13 +16,17 @@ namespace GaraMS.Service.Services.AppointmentService
 {
 	public class AppointmentService : IAppointmentService
 	{
-		private readonly IAppointmentRepo _appointmentRepo;
+		private	readonly IUserRepo _userRepo;
+        private readonly ITokenService _token;
+        private readonly IAppointmentRepo _appointmentRepo;
 		private readonly IAccountService _accountService;
 		private readonly ITokenService _tokenService;
 
-		public AppointmentService(IAppointmentRepo appointmentRepo, IAccountService accountService, ITokenService tokenService)
+		public AppointmentService(IUserRepo userRepo,ITokenService token,IAppointmentRepo appointmentRepo, IAccountService accountService, ITokenService tokenService)
 		{
-			_appointmentRepo = appointmentRepo;
+			_userRepo = userRepo;
+            _token = token;
+            _appointmentRepo = appointmentRepo;
 			_accountService = accountService;
 			_tokenService = tokenService;
 		}
@@ -84,7 +89,7 @@ namespace GaraMS.Service.Services.AppointmentService
 
 		public async Task<ResultModel> GetAllAppointmentsAsync(string? token)
 		{
-			var validationResult = await ValidateToken(token, new List<int> { 3 });
+			var validationResult = await ValidateToken(token, new List<int> { 1, 3 });
 			if (!validationResult.IsSuccess)
 				return validationResult;
 
@@ -130,5 +135,61 @@ namespace GaraMS.Service.Services.AppointmentService
 
 			return new ResultModel { IsSuccess = true, Code = 200, Data = appointment, Message = "Appointment status updated successfully" };
 		}
-	}
+
+        public async Task<ResultModel> GetAppointmentByLogin(string? token, Appointment appointment)
+        {
+            var resultModel = new ResultModel
+            {
+                IsSuccess = true,
+                Code = (int)HttpStatusCode.OK,
+                Data = null,
+                Message = null,
+            };
+            var res = new ResultModel
+            {
+                IsSuccess = false,
+                Code = (int)HttpStatusCode.Unauthorized,
+                Message = "Invalid token."
+            };
+
+            var decodeModel = _token.decode(token);
+            var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 1 });
+            if (!isValidRole)
+            {
+                resultModel.IsSuccess = false;
+                resultModel.Code = (int)HttpStatusCode.Forbidden;
+                resultModel.Message = "You don't permission to perform this action.";
+
+                return resultModel;
+            }
+            if (!int.TryParse(decodeModel.userid, out int userId))
+            {
+                return res;
+            }
+            if (userId <= 0)
+            {
+                return res;
+            }
+            var customerId = await _userRepo.GetCustomerIdByUserIdAsync(userId);
+            if (customerId == null || customerId <= 0)
+            {
+                resultModel.IsSuccess = false;
+                resultModel.Code = (int)HttpStatusCode.NotFound;
+                resultModel.Message = "Customer not found.";
+                return resultModel;
+            }
+            var appointmentList = await _appointmentRepo.GetAppointmentsByUserId(customerId);
+            if (appointmentList == null)
+            {
+                resultModel.IsSuccess = false;
+                resultModel.Code = (int)HttpStatusCode.NotFound;
+                resultModel.Message = "No appointment found.";
+                return resultModel;
+            }
+
+            resultModel.Data = appointmentList;
+            resultModel.Message = "Appointment retrieved successfully.";
+            return resultModel;
+        }
+    }
 }

@@ -15,13 +15,16 @@ using Microsoft.Extensions.Configuration;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowReactApp", policy =>
+    options.AddPolicy("AllowAll", builder =>
     {
-        policy.WithOrigins("http://localhost:3000") // Domain React app
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        builder
+            .WithOrigins("http://localhost:3000")
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
     });
 });
+
 // Add services to the container.
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -33,7 +36,11 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<GaraManagementSystemContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("ConnectionStringDB")));
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("ConnectionStringDB"));
+
+    options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+});
 builder.Services.AddControllers(options => options.SuppressAsyncSuffixInActionNames = false);
 
 // ✅ Register IAccountService in Dependency Injection (Fixes your issue)
@@ -107,7 +114,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 

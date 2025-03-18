@@ -83,7 +83,7 @@ namespace GaraMS.Service.Services.DashboardService
                     TotalActiveCategories = await _context.Categories.CountAsync(c => c.Status == true),
                     TotalAppointments = await _context.Appointments.CountAsync(),
                     TotalPendingAppointments = await _context.Appointments.CountAsync(a => a.Status == "Pending"),
-                    TotalCompletedAppointments = await _context.Appointments.CountAsync(a => a.Status == "Completed"),
+                    TotalCompletedAppointments = await _context.Appointments.CountAsync(a => a.Status == "Complete"),
                     TotalCustomers = await _context.Customers.CountAsync(),
                     TotalEmployees = await _context.Employees.CountAsync(),
                     TotalRevenue = (decimal)(totalRevenueResult.Data ?? 0m),
