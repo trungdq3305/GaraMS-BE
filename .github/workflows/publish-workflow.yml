@@ -42,6 +42,7 @@ jobs:
         push: true
         tags: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_APP_NAME }}:${{ github.sha }}
         file: src/GaraMS.API/Dockerfile
+        context: src
 
     - name: Azure Login
       uses: azure/login@v2
