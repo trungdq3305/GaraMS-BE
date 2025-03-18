@@ -27,7 +27,7 @@ namespace GaraMS.API.Controllers
 			var result = await _appointmentService.GetAllAppointmentsAsync(token);
 			return StatusCode(result.Code, result);
 		}
-        [HttpGet("hahaha")]
+        [HttpGet("hahahahihi")]
         public async Task<IActionResult> GetAllAppoddintments()
         {
             var token = Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
