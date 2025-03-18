@@ -1,0 +1,6 @@
+services:
+  garams.api:
+    image: ${DOCKER_REGISTRY-}garamsapi
+    build:
+      context: .
+      dockerfile: GaraMS.API/Dockerfile
