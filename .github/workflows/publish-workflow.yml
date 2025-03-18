@@ -5,9 +5,9 @@ on:
     branches: [ master ]
     
 env:
-  AZURE_CONTAINER_REGISTRY: acr_name
-  CONTAINER_APP_NAME: ca_name
-  RESOURCE_GROUP: rg_name
+  AZURE_CONTAINER_REGISTRY: garams
+  CONTAINER_APP_NAME: garams
+  RESOURCE_GROUP: group01
 jobs:
   build:
     runs-on: ubuntu-latest
