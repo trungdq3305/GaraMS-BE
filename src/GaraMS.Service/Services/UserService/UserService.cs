@@ -520,8 +520,18 @@ namespace GaraMS.Service.Services.UserService
                 res.Message = "User not found.";
                 return res;
             }
+            if (!string.IsNullOrEmpty(model.Phone) && model.Phone != user.PhoneNumber)
+            {
+                var phoneValidationResult = await _Validate.IsPhoneValid(model.Phone);
+                if (phoneValidationResult != null && !phoneValidationResult.IsSuccess)
+                {
+                    res.Code = (int)HttpStatusCode.NotFound;
+                    res.Message = "Invalid phone number.";
+                    return res;
+                }
+            }
 
-            user.UserName = model.UserName ?? user.UserName;
+            user.PhoneNumber = model.Phone ?? user.PhoneNumber;
             user.Email = model.Email ?? user.Email;
             user.FullName = model.FullName ?? user.FullName;
             user.Address = model.Address ?? user.Address;
@@ -534,7 +544,7 @@ namespace GaraMS.Service.Services.UserService
             res.Message = "User updated successfully.";
             res.Data = new
             {
-                user.UserName,
+                user.PhoneNumber,
                 user.Email,
                 user.FullName,
                 user.Address,
@@ -562,7 +572,7 @@ namespace GaraMS.Service.Services.UserService
                 return res;
             }
 
-            user.UserName = model.UserName ?? user.UserName;
+            user.PhoneNumber = model.Phone ?? user.PhoneNumber;
             user.Email = model.Email ?? user.Email;
             user.FullName = model.FullName ?? user.FullName;
             user.Address = model.Address ?? user.Address;
@@ -575,7 +585,7 @@ namespace GaraMS.Service.Services.UserService
             res.Message = "User updated successfully.";
             res.Data = new
             {
-                user.UserName,
+                user.PhoneNumber,
                 user.Email,
                 user.FullName,
                 user.Address,
