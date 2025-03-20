@@ -4,6 +4,9 @@ using GaraMS.Data.ViewModels.ResultModel;
 using GaraMS.Data.ViewModels.WarrantyHistoryModel;
 using GaraMS.Service.Services.AccountService;
 using GaraMS.Service.Services.TokenService;
+using GaraMS.Data.Models;
+using GaraMS.Data.Repositories.AppointmentRepo;
+using GaraMS.Data.Repositories.ServiceRepo;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,13 +22,23 @@ namespace GaraMS.Service.Services.WarrantyHistoryService
 		private readonly IUserRepo _userRepo;
 		private readonly ITokenService _tokenService;
 		private readonly IAccountService _accountService;
+		private readonly IAppointmentRepo _appointmentRepo;
+		private readonly IServiceRepo _serviceRepo;
 
-		public WarrantyHistoryService(IUserRepo userRepo, ITokenService tokenService, IWarrantyHistoryRepo warrantyHistoryRepo, IAccountService accountService) 
+		public WarrantyHistoryService(
+			IUserRepo userRepo, 
+			ITokenService tokenService, 
+			IWarrantyHistoryRepo warrantyHistoryRepo, 
+			IAccountService accountService,
+			IAppointmentRepo appointmentRepo,
+			IServiceRepo serviceRepo)
 		{
 			_warrantyHistoryRepo = warrantyHistoryRepo;
 			_userRepo = userRepo;
 			_tokenService = tokenService;
 			_accountService = accountService;
+			_appointmentRepo = appointmentRepo;
+			_serviceRepo = serviceRepo;
 		}
 
 		private ResultModel UnauthorizedResult => new()
@@ -118,6 +131,61 @@ namespace GaraMS.Service.Services.WarrantyHistoryService
 				return new ResultModel { IsSuccess = false, Code = 400, Message = "Failed to update warranty history" };
 
 			return new ResultModel { IsSuccess = true, Code = 200, Data = warrantyHistory, Message = "Warranty history updated successfully" };
+		}
+
+		public async Task<ResultModel> CreateWarrantyPeriodForAppointmentAsync(string? token, int appointmentId)
+		{
+			var validationResult = await ValidateToken(token, new List<int> { 3 });
+			if (!validationResult.IsSuccess)
+				return validationResult;
+
+			var appointment = await _appointmentRepo.GetAppointmentByIdAsync(appointmentId);
+			if (appointment == null)
+				return new ResultModel { IsSuccess = false, Code = 404, Message = "Appointment not found" };
+
+			if (appointment.Status != "Complete")
+				return new ResultModel { IsSuccess = false, Code = 400, Message = "Appointment is not completed" };
+
+			var warrantyHistories = new List<WarrantyHistory>();
+			foreach (var appointmentService in appointment.AppointmentServices)
+			{
+				if (!appointmentService.ServiceId.HasValue)
+					continue;
+
+				var service = await _serviceRepo.GetServiceByIdAsync(appointmentService.ServiceId.Value);
+				if (service == null || !service.WarrantyPeriod.HasValue)
+					continue;
+
+				var warrantyHistory = new WarrantyHistory
+				{
+					AppointmentId = appointmentId,
+					ServiceId = service.ServiceId,
+					StartDay = DateTime.Now,
+					EndDay = DateTime.Now.AddDays(service.WarrantyPeriod.Value),
+					Status = true,
+					Note = $"Warranty period for service: {service.ServiceName}"
+				};
+
+				warrantyHistories.Add(warrantyHistory);
+			}
+
+			if (!warrantyHistories.Any())
+				return new ResultModel { IsSuccess = false, Code = 400, Message = "No valid services found for warranty period" };
+
+			foreach (var warrantyHistory in warrantyHistories)
+			{
+				await _warrantyHistoryRepo.CreateWarrantyHistoryAsync(new WarrantyHistoryModel
+				{
+					AppointmentId = warrantyHistory.AppointmentId,
+					ServiceId = warrantyHistory.ServiceId,
+					StartDay = warrantyHistory.StartDay,
+					EndDay = warrantyHistory.EndDay,
+					Status = warrantyHistory.Status,
+					Note = warrantyHistory.Note
+				});
+			}
+
+			return new ResultModel { IsSuccess = true, Code = 201, Message = "Warranty periods created successfully" };
 		}
 	}
 }

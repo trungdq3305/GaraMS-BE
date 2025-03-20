@@ -56,5 +56,13 @@ namespace GaraMS.API.Controllers
 			var result = await _warrantyHistoryService.DeleteWarrantyHistoryAsync(token, id);
 			return StatusCode(result.Code, result);
 		}
+
+		[HttpPost("appointment/{appointmentId}")]
+		public async Task<IActionResult> CreateWarrantyPeriodForAppointment(int appointmentId)
+		{
+			var token = Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+			var result = await _warrantyHistoryService.CreateWarrantyPeriodForAppointmentAsync(token, appointmentId);
+			return StatusCode(result.Code, result);
+		}
 	}
 }

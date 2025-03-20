@@ -26,7 +26,13 @@ public partial class WarrantyHistory
 
     public int? ServiceId { get; set; }
 
+    public int? AppointmentId { get; set; }
+
     [ForeignKey("ServiceId")]
     [InverseProperty("WarrantyHistories")]
     public virtual Service Service { get; set; }
+
+    [ForeignKey("AppointmentId")]
+    [InverseProperty("WarrantyHistories")]
+    public virtual Appointment Appointment { get; set; }
 }

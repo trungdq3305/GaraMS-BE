@@ -14,5 +14,6 @@ namespace GaraMS.Data.ViewModels.WarrantyHistoryModel
 		public string Note { get; set; }
 		public bool? Status { get; set; }
 		public int? ServiceId { get; set; }
+		public int? AppointmentId { get; set; }
 	}
 }

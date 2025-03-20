@@ -50,7 +50,7 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
 			return appointment;
 		}
 
-		public async Task<Appointment?> DeleteAppointmentAsync(int id)
+		public async Task<Appointment> DeleteAppointmentAsync(int id)
 		{
 			var appointment = await _context.Appointments.FindAsync(id);
 			if (appointment == null) return null;
@@ -89,7 +89,7 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
                 .ToListAsync();
         }
 
-        public async Task<Appointment?> UpdateAppointmentAsync(int id, AppointmentModel model)
+        public async Task<Appointment> UpdateAppointmentAsync(int id, AppointmentModel model)
 		{
 			var appointment = await _context.Appointments.FindAsync(id);
 			if (appointment == null) return null;
@@ -104,9 +104,13 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
 			return appointment;
 		}
 
-		public async Task<Appointment?> UpdateAppointmentStatusAsync(int id, string status, string reason)
+		public async Task<Appointment> UpdateAppointmentStatusAsync(int id, string status, string reason)
 		{
-			var appointment = await _context.Appointments.FindAsync(id);
+			var appointment = await _context.Appointments
+		.Include(a => a.AppointmentServices)
+		.ThenInclude(asv => asv.Service)
+		.FirstOrDefaultAsync(a => a.AppointmentId == id);
+
 			if (appointment == null) return null;
 
 			appointment.UpdatedAt = DateTime.UtcNow;
@@ -120,14 +124,29 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
 				appointment.Status = "Reject";
 				appointment.RejectReason = reason;
 			}
-            else if (status.Equals("Complete", StringComparison.OrdinalIgnoreCase))
-            {
-                appointment.Status = "Complete";
-                appointment.RejectReason = reason;
-            }
-            else
+			else if (status.Equals("Complete", StringComparison.OrdinalIgnoreCase))
 			{
-				return null; // Invalid status input
+				appointment.Status = "Complete";
+				appointment.RejectReason = reason;
+
+				var service = appointment.AppointmentServices.FirstOrDefault()?.Service;
+				if (service != null)
+				{
+					int warrantyPeriod = (int)service.WarrantyPeriod;
+
+					// Create a new warranty record
+					var warrantyHistory = new WarrantyHistory
+					{
+						StartDay = DateTime.UtcNow,
+						EndDay = DateTime.UtcNow.AddDays(warrantyPeriod - 1)
+					};
+
+					_context.WarrantyHistories.Add(warrantyHistory);
+				}
+			}
+			else
+			{
+				return null;
 			}
 
 			_context.Appointments.Update(appointment);
