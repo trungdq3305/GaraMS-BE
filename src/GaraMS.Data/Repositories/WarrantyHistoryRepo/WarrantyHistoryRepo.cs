@@ -52,8 +52,9 @@ namespace GaraMS.Data.Repositories.WarrantyHistoryRepo
 					EndDay = w.EndDay,
 					Note = w.Note,
 					Status = w.Status,
-					ServiceId = w.ServiceId
-				}).ToListAsync();
+					ServiceId = w.ServiceId,
+					AppointmentId = Convert.ToInt32(w.Note)
+                }).ToListAsync();
 		}
 
 		public async Task<WarrantyHistory> GetWarrantyHistoryByIdAsync(int id)
