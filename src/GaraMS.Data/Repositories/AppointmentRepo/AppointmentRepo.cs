@@ -107,9 +107,9 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
 		public async Task<Appointment> UpdateAppointmentStatusAsync(int id, string status, string reason)
 		{
 			var appointment = await _context.Appointments
-		.Include(a => a.AppointmentServices)
-		.ThenInclude(asv => asv.Service)
-		.FirstOrDefaultAsync(a => a.AppointmentId == id);
+				.Include(a => a.AppointmentServices)
+				.ThenInclude(asv => asv.Service)
+				.FirstOrDefaultAsync(a => a.AppointmentId == id);
 
 			if (appointment == null) return null;
 
@@ -129,20 +129,34 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
 				appointment.Status = "Complete";
 				appointment.RejectReason = reason;
 
-				var service = appointment.AppointmentServices.FirstOrDefault()?.Service;
-				if (service != null)
+				// First save the appointment changes
+				_context.Appointments.Update(appointment);
+				await _context.SaveChangesAsync();
+
+				// Then create warranty histories
+				foreach (var appointmentService in appointment.AppointmentServices)
 				{
-					int warrantyPeriod = (int)service.WarrantyPeriod;
-
-					// Create a new warranty record
-					var warrantyHistory = new WarrantyHistory
+					var service = appointmentService.Service;
+					if (service != null && service.WarrantyPeriod.HasValue)
 					{
-						StartDay = DateTime.UtcNow,
-						EndDay = DateTime.UtcNow.AddDays(warrantyPeriod - 1)
-					};
+						int warrantyPeriod = (int)service.WarrantyPeriod;
 
-					_context.WarrantyHistories.Add(warrantyHistory);
+						var warrantyHistory = new WarrantyHistory
+						{
+							ServiceId = service.ServiceId,
+							StartDay = DateTime.UtcNow,
+							EndDay = DateTime.UtcNow.AddDays(warrantyPeriod - 1),
+							Status = true,
+							Note = $"AppointmentID: {id}, ServiceID: {service.ServiceId}"
+						};
+
+						_context.WarrantyHistories.Add(warrantyHistory);
+					}
 				}
+				// Save warranty histories separately
+				await _context.SaveChangesAsync();
+				
+				return appointment;
 			}
 			else
 			{
