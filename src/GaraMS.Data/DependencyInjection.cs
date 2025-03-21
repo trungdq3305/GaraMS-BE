@@ -7,6 +7,7 @@ using GaraMS.Data.Repositories.ServiceRepo;
 using GaraMS.Data.Repositories.SupplierRepo;
 using GaraMS.Data.Repositories.UserRepo;
 using GaraMS.Data.Repositories.VehicleRepo;
+using GaraMS.Data.Repositories.WarrantyHistoryRepo;
 using GaraMS.Data.Repository;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,7 +33,8 @@ namespace GaraMS.Data
             services.AddScoped<IInventoryRepo, InventoryRepo>();
             services.AddScoped<IEmployeeRepo, EmployeeRepo>();
             services.AddScoped<IReportRepo, ReportRepo>();
-            return services;
+			services.AddScoped<IWarrantyHistoryRepo, WarrantyHistoryRepo>();
+			return services;
         }
     }
 }
