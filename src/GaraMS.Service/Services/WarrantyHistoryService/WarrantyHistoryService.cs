@@ -158,12 +158,11 @@ namespace GaraMS.Service.Services.WarrantyHistoryService
 
 				var warrantyHistory = new WarrantyHistory
 				{
-					AppointmentId = appointmentId,
 					ServiceId = service.ServiceId,
 					StartDay = DateTime.Now,
 					EndDay = DateTime.Now.AddDays(service.WarrantyPeriod.Value),
 					Status = true,
-					Note = $"Warranty period for service: {service.ServiceName}"
+					Note = $"Warranty for service: {service.ServiceName}"
 				};
 
 				warrantyHistories.Add(warrantyHistory);
@@ -176,7 +175,6 @@ namespace GaraMS.Service.Services.WarrantyHistoryService
 			{
 				await _warrantyHistoryRepo.CreateWarrantyHistoryAsync(new WarrantyHistoryModel
 				{
-					AppointmentId = warrantyHistory.AppointmentId,
 					ServiceId = warrantyHistory.ServiceId,
 					StartDay = warrantyHistory.StartDay,
 					EndDay = warrantyHistory.EndDay,

@@ -147,7 +147,7 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
 							StartDay = DateTime.UtcNow,
 							EndDay = DateTime.UtcNow.AddDays(warrantyPeriod - 1),
 							Status = true,
-							Note = $"AppointmentID: {id}, ServiceID: {service.ServiceId}"
+							Note = reason
 						};
 
 						_context.WarrantyHistories.Add(warrantyHistory);

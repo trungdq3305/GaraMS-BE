@@ -45,9 +45,6 @@ public partial class Appointment
     [InverseProperty("Appointment")]
     public virtual Invoice Invoice { get; set; }
 
-    [InverseProperty("Appointment")]
-    public virtual ICollection<WarrantyHistory> WarrantyHistories { get; set; } = new List<WarrantyHistory>();
-
     [ForeignKey("VehicleId")]
     [InverseProperty("Appointments")]
     public virtual Vehicle Vehicle { get; set; }
