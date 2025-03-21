@@ -50,7 +50,7 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
 			return appointment;
 		}
 
-		public async Task<Appointment?> DeleteAppointmentAsync(int id)
+		public async Task<Appointment> DeleteAppointmentAsync(int id)
 		{
 			var appointment = await _context.Appointments.FindAsync(id);
 			if (appointment == null) return null;
@@ -89,7 +89,7 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
                 .ToListAsync();
         }
 
-        public async Task<Appointment?> UpdateAppointmentAsync(int id, AppointmentModel model)
+        public async Task<Appointment> UpdateAppointmentAsync(int id, AppointmentModel model)
 		{
 			var appointment = await _context.Appointments.FindAsync(id);
 			if (appointment == null) return null;
@@ -104,9 +104,13 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
 			return appointment;
 		}
 
-		public async Task<Appointment?> UpdateAppointmentStatusAsync(int id, string status, string reason)
+		public async Task<Appointment> UpdateAppointmentStatusAsync(int id, string status, string reason)
 		{
-			var appointment = await _context.Appointments.FindAsync(id);
+			var appointment = await _context.Appointments
+				.Include(a => a.AppointmentServices)
+				.ThenInclude(asv => asv.Service)
+				.FirstOrDefaultAsync(a => a.AppointmentId == id);
+
 			if (appointment == null) return null;
 
 			appointment.UpdatedAt = DateTime.UtcNow;
@@ -120,14 +124,43 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
 				appointment.Status = "Reject";
 				appointment.RejectReason = reason;
 			}
-            else if (status.Equals("Complete", StringComparison.OrdinalIgnoreCase))
-            {
-                appointment.Status = "Complete";
-                appointment.RejectReason = reason;
-            }
-            else
+			else if (status.Equals("Complete", StringComparison.OrdinalIgnoreCase))
 			{
-				return null; // Invalid status input
+				appointment.Status = "Complete";
+				appointment.RejectReason = reason;
+
+				// First save the appointment changes
+				_context.Appointments.Update(appointment);
+				await _context.SaveChangesAsync();
+
+				// Then create warranty histories
+				foreach (var appointmentService in appointment.AppointmentServices)
+				{
+					var service = appointmentService.Service;
+					if (service != null && service.WarrantyPeriod.HasValue)
+					{
+						int warrantyPeriod = (int)service.WarrantyPeriod;
+
+						var warrantyHistory = new WarrantyHistory
+						{
+							ServiceId = service.ServiceId,
+							StartDay = DateTime.UtcNow,
+							EndDay = DateTime.UtcNow.AddDays(warrantyPeriod - 1),
+							Status = true,
+							Note = $"AppointmentID: {id}, ServiceID: {service.ServiceId}"
+						};
+
+						_context.WarrantyHistories.Add(warrantyHistory);
+					}
+				}
+				// Save warranty histories separately
+				await _context.SaveChangesAsync();
+				
+				return appointment;
+			}
+			else
+			{
+				return null;
 			}
 
 			_context.Appointments.Update(appointment);
