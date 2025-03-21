@@ -69,8 +69,9 @@ namespace GaraMS.Data.Repositories.WarrantyHistoryRepo
 
 			warranty.StartDay = model.StartDay;
 			warranty.EndDay = model.EndDay;
+			warranty.Status = model.Status;
 
-			_context.WarrantyHistories.Update(warranty);
+            _context.WarrantyHistories.Update(warranty);
 			await _context.SaveChangesAsync();
 			return warranty;
 		}
