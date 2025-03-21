@@ -100,7 +100,7 @@ namespace GaraMS.API.Controllers
                     if (!orderData.TryGetProperty("status", out var status))
                     {
                         Console.WriteLine("Status not found in order response");
-                        return Ok(new { success = false, redirectUrl = "http://localhost:3000/invoice/fail" });
+                        return Ok(new { success = false, redirectUrl = "https://gara-ms-fe-three.vercel.app/invoice/fail" });
                     }
 
                     var orderStatus = status.GetString();
@@ -109,7 +109,7 @@ namespace GaraMS.API.Controllers
                     if (orderStatus == "CREATED")
                     {
                         Console.WriteLine("Payment not completed: Order still in CREATED state");
-                        return Ok(new { success = false, redirectUrl = "http://localhost:3000/invoice/fail" });
+                        return Ok(new { success = false, redirectUrl = "https://gara-ms-fe-three.vercel.app/invoice/fail" });
                     }
 
                     try
@@ -162,14 +162,14 @@ namespace GaraMS.API.Controllers
                         Console.WriteLine($"Stack trace: {ex.StackTrace}");
                     }
 
-                    return Ok(new { success = false, redirectUrl = "http://localhost:3000/invoice/fail" });
+                    return Ok(new { success = false, redirectUrl = "https://gara-ms-fe-three.vercel.app/invoice/fail" });
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error in verify-payment: {ex.Message}");
                 Console.WriteLine($"Stack trace: {ex.StackTrace}");
-                return Ok(new { success = false, redirectUrl = "http://localhost:3000/invoice/fail" });
+                return Ok(new { success = false, redirectUrl = "https://gara-ms-fe-three.vercel.app/invoice/fail" });
             }
         }
     }

@@ -76,8 +76,8 @@ namespace GaraMS.Service.Services.InvoicesService
                         brand_name = "Gara Management System",
                         landing_page = "LOGIN",
                         user_action = "PAY_NOW",
-                        return_url = "http://localhost:3000/invoice/success",
-                        cancel_url = "http://localhost:3000/invoice/fail"
+                        return_url = "https://gara-ms-fe-three.vercel.app/invoice/success",
+                        cancel_url = "https://gara-ms-fe-three.vercel.app/invoice/fail"
                     }
                 };
 
