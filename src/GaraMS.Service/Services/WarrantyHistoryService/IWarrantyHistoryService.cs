@@ -16,5 +16,7 @@ namespace GaraMS.Service.Services.WarrantyHistoryService
 		Task<ResultModel> UpdateWarrantyHistoryAsync(string? token, int id, WarrantyHistoryModel model);
 		Task<ResultModel> DeleteWarrantyHistoryAsync(string? token, int id);
 		Task<ResultModel> CreateWarrantyPeriodForAppointmentAsync(string? token, int appointmentId);
-	}
+		Task<ResultModel> GetByLoginAsync(string? token);
+
+    }
 }

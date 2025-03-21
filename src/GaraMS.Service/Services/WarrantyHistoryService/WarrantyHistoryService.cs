@@ -185,5 +185,29 @@ namespace GaraMS.Service.Services.WarrantyHistoryService
 
 			return new ResultModel { IsSuccess = true, Code = 201, Message = "Warranty periods created successfully" };
 		}
-	}
+
+        public async Task<ResultModel> GetByLoginAsync(string? token)
+        {
+            var validationResult = await ValidateToken(token, new List<int> { 1, 2, 3 });
+            if (!validationResult.IsSuccess)
+                return validationResult;
+			var decodeModel = _tokenService.decode(token);
+			var userId = decodeModel.userid;
+
+            var warrantyHistories = await _warrantyHistoryRepo.GetAllWarrantyHistoriesAsync();
+			List<WarrantyHistoryModel> list = new();
+            foreach (var item in warrantyHistories)
+            {
+				int apId = Convert.ToInt32(item.Note);
+				var ap = await _appointmentRepo.GetAppointmentByIdAsync(apId);
+				int uid = (int)ap.Vehicle.Customer.UserId;
+				int userI = Convert.ToInt32(userId);
+                if (uid == userI)
+				{
+                    list.Add(item);
+				}
+            }
+            return new ResultModel { IsSuccess = true, Code = 200, Data = list, Message = "Warranty histories retrieved successfully" };
+        }
+    }
 }

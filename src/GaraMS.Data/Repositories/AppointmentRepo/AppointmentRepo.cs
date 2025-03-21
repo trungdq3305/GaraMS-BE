@@ -74,6 +74,7 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
 		{
 			return await _context.Appointments
 				.Include(a => a.Vehicle)
+				.ThenInclude(a => a.Customer)
 				.Include(a => a.AppointmentServices)
 				.ThenInclude(asv => asv.Service)
 				.FirstOrDefaultAsync(a => a.AppointmentId == id);
@@ -147,8 +148,8 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
 							StartDay = DateTime.UtcNow,
 							EndDay = DateTime.UtcNow.AddDays(warrantyPeriod - 1),
 							Status = true,
-							Note = reason
-						};
+							Note = appointment.AppointmentId.ToString()
+                        };
 
 						_context.WarrantyHistories.Add(warrantyHistory);
 					}

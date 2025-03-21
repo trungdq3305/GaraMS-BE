@@ -25,7 +25,15 @@ namespace GaraMS.API.Controllers
 			return StatusCode(result.Code, result);
 		}
 
-		[HttpGet("{id}")]
+        [HttpGet("Warranty-of-login")]
+        public async Task<IActionResult> GetWarrantyHistoriesOfLoginCustomer()
+        {
+            var token = Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+            var result = await _warrantyHistoryService.GetByLoginAsync(token);
+            return StatusCode(result.Code, result);
+        }
+
+        [HttpGet("{id}")]
 		public async Task<IActionResult> GetWarrantyHistoryById(int id)
 		{
 			var token = Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
