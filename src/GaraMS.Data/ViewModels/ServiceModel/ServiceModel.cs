@@ -10,7 +10,8 @@ namespace GaraMS.Data.ViewModels
 	{
         public int ServiceId { get; set; }
         public string ServiceName { get; set; }
-		public decimal? Price { get; set; }
+		public decimal? ServicePrice { get; set; }
+		public decimal? InventoryPrice { get; set; }
 		public string Description { get; set; }
 	}
 

@@ -42,7 +42,9 @@ namespace GaraMS.Data.Repositories.ServiceRepo
 			var service = new Service
 			{
 				ServiceName = model.ServiceName,
-				TotalPrice = model.Price,
+				ServicePrice = model.ServicePrice,
+				InventoryPrice = model.InventoryPrice,
+				TotalPrice = model.ServicePrice + model.InventoryPrice,
 				Description = model.Description,
 				CreatedAt = DateTime.UtcNow,
 				UpdatedAt = DateTime.UtcNow
@@ -86,7 +88,9 @@ namespace GaraMS.Data.Repositories.ServiceRepo
 			var service = await _context.Services.FindAsync(id);
 
 			service.ServiceName = model.ServiceName;
-			service.TotalPrice = model.Price;
+			service.ServicePrice = model.ServicePrice;
+			service.InventoryPrice = model.InventoryPrice;
+			service.TotalPrice = model.ServicePrice + model.InventoryPrice;
 			service.Description = model.Description;
 			service.UpdatedAt = DateTime.UtcNow;
 
@@ -102,7 +106,7 @@ namespace GaraMS.Data.Repositories.ServiceRepo
                 var service = await _context.Services.FindAsync(serviceId);
                 if (service == null) return false;
 
-                service.TotalPrice = totalPrice;
+                service.TotalPrice = service.ServicePrice + service.InventoryPrice;
                 service.Promotion = promotion;
                 service.UpdatedAt = DateTime.UtcNow;
 
