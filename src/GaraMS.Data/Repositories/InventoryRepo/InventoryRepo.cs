@@ -25,7 +25,7 @@ namespace GaraMS.Data.Repositories.InventoryRepo
 				Name = model.Name,
 				Description = model.Description,
 				Unit = model.Unit,
-				Price = model.Price,
+				Price = model.InventoryPrice,
 				Status = model.Status,
 				CreatedAt = DateTime.UtcNow,
 				UpdatedAt = DateTime.UtcNow
@@ -59,7 +59,7 @@ namespace GaraMS.Data.Repositories.InventoryRepo
                     Name = i.Name,
 					Description = i.Description,
 					Unit = i.Unit,
-					Price = i.Price,
+					InventoryPrice = i.Price,
 					Status = i.Status,
 					InventorySuppliers = i.InventorySuppliers.Select(isup => new SupplierModel
 					{
@@ -91,11 +91,34 @@ namespace GaraMS.Data.Repositories.InventoryRepo
 			inventory.Name = model.Name;
 			inventory.Description = model.Description;
 			inventory.Unit = model.Unit;
-			inventory.Price = model.Price;
+			inventory.Price = model.InventoryPrice;
 			inventory.Status = model.Status;
 			inventory.UpdatedAt = DateTime.UtcNow;
 
 			_context.Inventories.Update(inventory);
+			await _context.SaveChangesAsync();
+
+			var serviceIds = await _context.ServiceInventories
+							.Where(si => si.InventoryId == id)
+							.Select(si => si.ServiceId)
+							.ToListAsync();
+
+			foreach (var serviceId in serviceIds)
+			{
+				var service = await _context.Services
+					.Include(s => s.ServiceInventories)
+					.ThenInclude(si => si.Inventory)
+					.FirstOrDefaultAsync(s => s.ServiceId == serviceId);
+
+				if (service != null)
+				{
+					decimal totalInventoryPrice = service.ServiceInventories
+						.Sum(si => si.Inventory.Price ?? 0);
+					service.InventoryPrice = totalInventoryPrice;
+					service.TotalPrice = (service.ServicePrice ?? 0) + totalInventoryPrice;
+				}
+			}
+
 			await _context.SaveChangesAsync();
 			return inventory;
 		}

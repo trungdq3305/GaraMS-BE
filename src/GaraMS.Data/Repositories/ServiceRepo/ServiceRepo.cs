@@ -34,6 +34,7 @@ namespace GaraMS.Data.Repositories.ServiceRepo
 
 			_context.ServiceInventories.Add(newServiceInventory);
 			await _context.SaveChangesAsync();
+			await UpdateInventoryPriceAsync(serviceId);
 			return true;
 		}
 
@@ -43,8 +44,8 @@ namespace GaraMS.Data.Repositories.ServiceRepo
 			{
 				ServiceName = model.ServiceName,
 				ServicePrice = model.ServicePrice,
-				InventoryPrice = model.InventoryPrice,
-				TotalPrice = model.ServicePrice + model.InventoryPrice,
+				InventoryPrice = 0,
+				TotalPrice = model.ServicePrice ?? 0,
 				Description = model.Description,
 				CreatedAt = DateTime.UtcNow,
 				UpdatedAt = DateTime.UtcNow
@@ -52,6 +53,30 @@ namespace GaraMS.Data.Repositories.ServiceRepo
 
 			_context.Services.Add(service);
 			await _context.SaveChangesAsync();
+
+			if (model.InventoryIds != null && model.InventoryIds.Any())
+			{
+				foreach (var inventoryId in model.InventoryIds)
+				{
+					var serviceInventory = new ServiceInventory
+					{
+						ServiceId = service.ServiceId,
+						InventoryId = inventoryId
+					};
+					_context.ServiceInventories.Add(serviceInventory);
+				}
+				await _context.SaveChangesAsync();
+
+				var inventoryPrices = await _context.Inventories
+					.Where(i => model.InventoryIds.Contains(i.InventoryId))
+					.Select(i => i.Price)
+					.ToListAsync();
+
+				service.InventoryPrice = inventoryPrices.Sum() ?? 0;
+				service.TotalPrice = (service.ServicePrice ?? 0) + service.InventoryPrice;
+				await _context.SaveChangesAsync();
+			}
+
 			return service;
 		}
 
@@ -73,6 +98,23 @@ namespace GaraMS.Data.Repositories.ServiceRepo
 			return await _context.Services.FirstOrDefaultAsync(s => s.ServiceId == id);
 		}
 
+		public async Task<bool> RemoveInventoryFromServiceAsync(int inventoryId, int serviceId)
+		{
+			var serviceInventory = await _context.ServiceInventories
+								.FirstOrDefaultAsync(si => si.InventoryId == inventoryId && si.ServiceId == serviceId);
+
+			if (serviceInventory == null)
+				return false;
+
+			_context.ServiceInventories.Remove(serviceInventory);
+			await _context.SaveChangesAsync();
+
+			// Cập nhật InventoryPrice sau khi xóa Inventory
+			await UpdateInventoryPriceAsync(serviceId);
+
+			return true;
+		}
+
 		public async Task<Service> RemoveServiceAsync(int id)
 		{
 			var service = await _context.Services.FindAsync(id);
@@ -83,16 +125,35 @@ namespace GaraMS.Data.Repositories.ServiceRepo
 			return service;
 		}
 
+		public async Task UpdateInventoryPriceAsync(int serviceId)
+		{
+			var service = await _context.Services
+						.Include(s => s.ServiceInventories)
+						.ThenInclude(si => si.Inventory)
+						.FirstOrDefaultAsync(s => s.ServiceId == serviceId);
+
+			if (service != null)
+			{
+				decimal totalInventoryPrice = service.ServiceInventories
+					.Sum(si => si.Inventory.Price ?? 0);
+
+				service.InventoryPrice = totalInventoryPrice;
+				service.TotalPrice = (service.ServicePrice ?? 0) + totalInventoryPrice;
+				await _context.SaveChangesAsync();
+			}
+		}
+
 		public async Task<Service> UpdateServiceAsync(int id, ServiceModel model)
 		{
 			var service = await _context.Services.FindAsync(id);
+			if (service == null) return null;
 
 			service.ServiceName = model.ServiceName;
 			service.ServicePrice = model.ServicePrice;
-			service.InventoryPrice = model.InventoryPrice;
-			service.TotalPrice = model.ServicePrice + model.InventoryPrice;
 			service.Description = model.Description;
 			service.UpdatedAt = DateTime.UtcNow;
+
+			service.TotalPrice = (service.ServicePrice ?? 0) + (service.InventoryPrice ?? 0);
 
 			_context.Services.Update(service);
 			await _context.SaveChangesAsync();

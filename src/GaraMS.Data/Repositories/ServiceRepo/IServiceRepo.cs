@@ -21,5 +21,8 @@ namespace GaraMS.Data.Repositories.ServiceRepo
 
 		Task<List<ServiceInventory>> GetAllServiceInventoriesAsync();
 		Task<bool> AssignInventoryToServiceAsync(int inventoryId, int serviceId);
+
+		Task UpdateInventoryPriceAsync(int serviceId);
+		Task<bool> RemoveInventoryFromServiceAsync(int inventoryId, int serviceId);
 	}
 }

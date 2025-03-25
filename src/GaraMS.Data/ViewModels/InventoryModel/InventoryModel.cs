@@ -13,7 +13,7 @@ namespace GaraMS.Data.ViewModels.InventoryModel
         public string Name { get; set; }
 		public string Description { get; set; }
 		public string Unit { get; set; }
-		public decimal? Price { get; set; }
+		public decimal? InventoryPrice { get; set; }
 		public bool? Status { get; set; }
 		public List<SupplierModel> InventorySuppliers { get; set; } = new List<SupplierModel>();
 		public List<ServiceModel> ServiceInventories { get; set; } = new List<ServiceModel>();
