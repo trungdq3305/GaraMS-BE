@@ -172,5 +172,21 @@ namespace GaraMS.API.Controllers
                 return Ok(new { success = false, redirectUrl = "https://gara-ms-fe-three.vercel.app/invoice/fail" });
             }
         }
+
+        [HttpGet("by-appointment/{appointmentId}")]
+        public async Task<IActionResult> GetInvoiceByAppointmentId(int appointmentId)
+        {
+            var invoice = await _context.Invoices
+                .Include(i => i.Appointment)
+                .Where(i => i.AppointmentId == appointmentId)
+                .FirstOrDefaultAsync();
+
+            if (invoice == null)
+            {
+                return NotFound(new { message = "No invoice found for this appointment" });
+            }
+
+            return Ok(invoice);
+        }
     }
 }
