@@ -48,7 +48,8 @@ namespace GaraMS.Data.Repositories.ServiceRepo
 				TotalPrice = model.ServicePrice ?? 0,
 				Description = model.Description,
 				CreatedAt = DateTime.UtcNow,
-				UpdatedAt = DateTime.UtcNow
+				UpdatedAt = DateTime.UtcNow,
+				WarrantyPeriod = model.WarrantyPeriod
 			};
 
 			_context.Services.Add(service);

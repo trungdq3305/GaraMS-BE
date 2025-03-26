@@ -14,6 +14,7 @@ namespace GaraMS.Data.ViewModels
 		public decimal? InventoryPrice { get; set; }
 		public string Description { get; set; }
 		public List<int> InventoryIds { get; set; } = new List<int>();
+		public int? WarrantyPeriod { get; set; }
 	}
 
 	public class AssignInventoryToServiceModel
