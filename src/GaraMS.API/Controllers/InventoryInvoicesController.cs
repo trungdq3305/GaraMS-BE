@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Net.Http;
+using System.Text.Json;
+using System.Text;
 
 namespace GaraMS.API.Controllers
 {
@@ -16,11 +19,15 @@ namespace GaraMS.API.Controllers
         private readonly GaraManagementSystemContext _context;
         private readonly ITokenService _token;
         private readonly IAccountService _accountService;
-        public InventoryInvoicesController(GaraManagementSystemContext context, ITokenService token, IAccountService accountService)
+        private readonly IConfiguration _config;
+        private readonly HttpClient _httpClient;
+        public InventoryInvoicesController(GaraManagementSystemContext context, ITokenService token, IAccountService accountService, IConfiguration config, HttpClient httpClient)
         {
             _context = context;
             _token = token;
             _accountService = accountService;
+            _config = config;
+            _httpClient = httpClient;
         }
         [HttpPut("DiliverType")]
         public async Task<IActionResult> EditDiliverType([FromQuery] string diliverType)
@@ -37,7 +44,7 @@ namespace GaraMS.API.Controllers
             var useid = Convert.ToInt32(decodeModel.userid);
             var ii = await _context.InventoryInvoices.FirstOrDefaultAsync(x => (x.UserId == useid && x.Status != "False"));
 
-            
+
             // Kiểm tra nếu không tìm thấy InventoryInvoice hoặc Inventory
             if (ii == null)
             {
@@ -168,9 +175,113 @@ namespace GaraMS.API.Controllers
             _context.InventoryInvoices.Add(newii);
             await _context.SaveChangesAsync();
 
-            
+
 
             return StatusCode(201, ii.Status); // Trả về 201 Created thay vì 200
+        }
+
+        [HttpPost("payment")]
+        public async Task<IActionResult> PaySingleInvoice()
+        {
+            try
+            {
+                var a = await _context.InventoryInvoices.FirstOrDefaultAsync(x => x.Status != "False");
+                var iiId = a.InventoryInvoiceId;
+                decimal totalAmount = (decimal)a.TotalAmount;
+
+                var clientId = _config["PayPal:ClientId"];
+                var secret = _config["PayPal:Secret"];
+
+                // Get access token
+                var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{clientId}:{secret}"));
+                _httpClient.DefaultRequestHeaders.Clear();
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", auth);
+
+                var tokenRequest = new StringContent("grant_type=client_credentials", Encoding.UTF8, "application/x-www-form-urlencoded");
+                var tokenResponse = await _httpClient.PostAsync("https://api-m.sandbox.paypal.com/v1/oauth2/token", tokenRequest);
+
+                if (!tokenResponse.IsSuccessStatusCode)
+                {
+                    var errorContent = await tokenResponse.Content.ReadAsStringAsync();
+                    throw new InvalidOperationException($"Failed to get PayPal access token. Status: {tokenResponse.StatusCode}, Error: {errorContent}");
+                }
+
+                var tokenResult = await tokenResponse.Content.ReadAsStringAsync();
+                var tokenData = JsonSerializer.Deserialize<JsonElement>(tokenResult);
+
+                if (!tokenData.TryGetProperty("access_token", out var accessTokenElement))
+                {
+                    throw new InvalidOperationException($"Invalid token response format: {tokenResult}");
+                }
+
+                var accessToken = accessTokenElement.GetString();
+
+                // Create order
+                _httpClient.DefaultRequestHeaders.Clear();
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+                _httpClient.DefaultRequestHeaders.Add("Prefer", "return=representation");
+
+                var requestBody = new
+                {
+                    intent = "CAPTURE",
+                    purchase_units = new[]
+                    {
+                        new
+                        {
+                            reference_id = iiId.ToString(),
+                            description = $"Invoice #{iiId}",
+                            amount = new
+                            {
+                                currency_code = "USD",
+                                value = totalAmount.ToString("F2")
+                            }
+                        }
+                    },
+                    application_context = new
+                    {
+                        brand_name = "Gara Management System",
+                        landing_page = "LOGIN",
+                        user_action = "PAY_NOW",
+                        return_url = "https://gara-ms-fe-three.vercel.app/invoice/inventorysuccess",
+                        cancel_url = "https://gara-ms-fe-three.vercel.app/invoice/fail"
+                    }
+                };
+
+                var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync("https://api-m.sandbox.paypal.com/v2/checkout/orders", content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    throw new InvalidOperationException($"Failed to create PayPal order. Status: {response.StatusCode}, Error: {errorContent}");
+                }
+
+                var result = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"PayPal Response: {result}");
+
+                var jsonResponse = JsonSerializer.Deserialize<JsonElement>(result);
+
+                if (jsonResponse.TryGetProperty("links", out var links))
+                {
+                    var approvalLink = links.EnumerateArray()
+                        .FirstOrDefault(link =>
+                            link.TryGetProperty("rel", out var rel) &&
+                            rel.GetString() == "approve" &&
+                            link.TryGetProperty("href", out _));
+
+                    if (approvalLink.TryGetProperty("href", out var href))
+                    {
+                        return Ok(href.GetString());
+                    }
+                }
+
+                throw new InvalidOperationException($"Approval URL not found in PayPal response: {result}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in CreatePaymentUrl: {ex}");
+                throw;
+            }
         }
     }
 }
