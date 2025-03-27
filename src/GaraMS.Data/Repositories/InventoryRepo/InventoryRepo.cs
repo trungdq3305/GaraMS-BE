@@ -18,6 +18,24 @@ namespace GaraMS.Data.Repositories.InventoryRepo
 		{
 			_context = context;	
 		}
+
+		public async Task<Inventory> AddInventoryUnitAsync(int inventoryId, int amount)
+		{
+			var inventory = await _context.Inventories.FindAsync(inventoryId);
+			if (inventory == null) return null;
+
+			var currentUnit = int.TryParse(inventory.Unit, out int current) ? current : 0;
+
+			inventory.Unit = (currentUnit + amount).ToString();
+			inventory.Status = true;
+			inventory.UpdatedAt = DateTime.UtcNow;
+
+			_context.Entry(inventory).State = EntityState.Modified;
+
+			await _context.SaveChangesAsync();
+			return inventory;
+		}
+
 		public async Task<Inventory> CreateInventoryAsync(InventoryModel model)
 		{
 			var inventory = new Inventory
@@ -26,7 +44,7 @@ namespace GaraMS.Data.Repositories.InventoryRepo
 				Description = model.Description,
 				Unit = model.Unit,
 				Price = model.InventoryPrice,
-				Status = model.Status,
+				Status = int.TryParse(model.Unit, out int unit) && unit > 0,
 				CreatedAt = DateTime.UtcNow,
 				UpdatedAt = DateTime.UtcNow
 			};
@@ -92,7 +110,7 @@ namespace GaraMS.Data.Repositories.InventoryRepo
 			inventory.Description = model.Description;
 			inventory.Unit = model.Unit;
 			inventory.Price = model.InventoryPrice;
-			inventory.Status = model.Status;
+			inventory.Status = int.TryParse(model.Unit, out int unit) && unit > 0;
 			inventory.UpdatedAt = DateTime.UtcNow;
 
 			_context.Inventories.Update(inventory);
@@ -118,6 +136,24 @@ namespace GaraMS.Data.Repositories.InventoryRepo
 					service.TotalPrice = (service.ServicePrice ?? 0) + totalInventoryPrice;
 				}
 			}
+
+			await _context.SaveChangesAsync();
+			return inventory;
+		}
+
+		public async Task<Inventory> UseInventoryAsync(int inventoryId)
+		{
+			var inventory = await _context.Inventories.FindAsync(inventoryId);
+			if (inventory == null) return null;
+
+			if (!int.TryParse(inventory.Unit, out int currentUnit) || currentUnit <= 0)
+				return null;
+
+			inventory.Unit = (currentUnit - 1).ToString();
+			inventory.Status = currentUnit - 1 > 0;
+			inventory.UpdatedAt = DateTime.UtcNow;
+
+			_context.Entry(inventory).State = EntityState.Modified;
 
 			await _context.SaveChangesAsync();
 			return inventory;

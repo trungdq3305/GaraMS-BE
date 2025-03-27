@@ -67,5 +67,25 @@ namespace GaraMS.API.Controllers
 
 			return Ok(result);
 		}
+
+		[HttpPut("inventory/{id}/add-unit")]
+		public async Task<IActionResult> AddInventoryUnit([FromHeader] string authorization, int id, [FromBody] int amount)
+		{
+			var token = Request.Headers["Authorization"].FirstOrDefault();
+			var result = await _inventoryService.AddInventoryUnitAsync(token, id, amount);
+
+			if (!result.IsSuccess) return NotFound(result);
+			return Ok(result);
+		}
+
+		[HttpPut("inventory/{id}/use")]
+		public async Task<IActionResult> UseInventory([FromHeader] string authorization, int id)
+		{
+			var token = Request.Headers["Authorization"].FirstOrDefault();
+			var result = await _inventoryService.UseInventoryAsync(token, id);
+
+			if (!result.IsSuccess) return BadRequest(result);
+			return Ok(result);
+		}
 	}
 }

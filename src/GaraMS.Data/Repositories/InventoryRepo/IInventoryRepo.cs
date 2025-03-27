@@ -15,5 +15,7 @@ namespace GaraMS.Data.Repositories.InventoryRepo
 		Task<Inventory> CreateInventoryAsync(InventoryModel model);
 		Task<Inventory> UpdateInventoryAsync(int id, InventoryModel model);
 		Task<Inventory> DeleteInventoryAsync(int id);
+		Task<Inventory> AddInventoryUnitAsync(int inventoryId, int amount);
+		Task<Inventory> UseInventoryAsync(int inventoryId);
 	}
 }

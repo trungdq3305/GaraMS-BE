@@ -18,6 +18,15 @@ namespace GaraMS.Service.Services.InventoryService
             _inventoryRepo = inventoryRepo;
 		}
 
+		public async Task<ResultModel> AddInventoryUnitAsync(string token, int inventoryId, int amount)
+		{
+			var inventory = await _inventoryRepo.AddInventoryUnitAsync(inventoryId, amount);
+			if (inventory == null)
+				return new ResultModel { IsSuccess = false, Code = 404, Message = "Inventory not found" };
+
+			return new ResultModel { IsSuccess = true, Code = 200, Data = inventory, Message = "Inventory quantity updated successfully" };
+		}
+
 		public async Task<ResultModel> CreateInventoryAsync(string token, InventoryModel model)
 		{
 			var inventory = await _inventoryRepo.CreateInventoryAsync(model);
@@ -58,6 +67,15 @@ namespace GaraMS.Service.Services.InventoryService
 				return new ResultModel { IsSuccess = false, Code = 400, Message = "Failed to update inventory" };
 
 			return new ResultModel { IsSuccess = true, Code = 200, Data = inventory, Message = "Inventory updated successfully" };
+		}
+
+		public async Task<ResultModel> UseInventoryAsync(string token, int inventoryId)
+		{
+			var inventory = await _inventoryRepo.UseInventoryAsync(inventoryId);
+			if (inventory == null)
+				return new ResultModel { IsSuccess = false, Code = 400, Message = "Inventory not found or out of stock" };
+
+			return new ResultModel { IsSuccess = true, Code = 200, Data = inventory, Message = "Inventory used successfully" };
 		}
 	}
 }

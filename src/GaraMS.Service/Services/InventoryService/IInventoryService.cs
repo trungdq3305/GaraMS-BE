@@ -16,5 +16,8 @@ namespace GaraMS.Service.Services.InventoryService
 		Task<ResultModel> CreateInventoryAsync(string token, InventoryModel model);
 		Task<ResultModel> UpdateInventoryAsync(string token, int id, InventoryModel model);
 		Task<ResultModel> DeleteInventoryAsync(string token, int id);
+
+		Task<ResultModel> AddInventoryUnitAsync(string token, int inventoryId, int amount);
+		Task<ResultModel> UseInventoryAsync(string token, int inventoryId);
 	}
 }
