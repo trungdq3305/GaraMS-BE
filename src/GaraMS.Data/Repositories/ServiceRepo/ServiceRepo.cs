@@ -33,6 +33,16 @@ namespace GaraMS.Data.Repositories.ServiceRepo
 			};
 
 			_context.ServiceInventories.Add(newServiceInventory);
+            await _context.SaveChangesAsync();
+			var service = await _context.Services.Include(s => s.ServicePromotions).ThenInclude(s => s.Promotion).FirstOrDefaultAsync(s => s.ServiceId == serviceId);
+			var inventory = await _context.Inventories.FirstOrDefaultAsync(i => i.InventoryId == inventoryId);
+			service.InventoryPrice += inventory.Price;
+			var servicePromorion = await _context.ServicePromotions.Include(si => si.Promotion)
+				.FirstOrDefaultAsync(si => si.ServiceId == serviceId);
+			service.Promotion = (service.ServicePrice + service.InventoryPrice) * (servicePromorion.Promotion.DiscountPercent / 100);
+
+			service.TotalPrice = (service.ServicePrice + service.InventoryPrice) - service.Promotion;
+			_context.Services.Update(service);
 			await _context.SaveChangesAsync();
 			await UpdateInventoryPriceAsync(serviceId);
 			return true;
@@ -54,29 +64,6 @@ namespace GaraMS.Data.Repositories.ServiceRepo
 
 			_context.Services.Add(service);
 			await _context.SaveChangesAsync();
-
-			if (model.InventoryIds != null && model.InventoryIds.Any())
-			{
-				foreach (var inventoryId in model.InventoryIds)
-				{
-					var serviceInventory = new ServiceInventory
-					{
-						ServiceId = service.ServiceId,
-						InventoryId = inventoryId
-					};
-					_context.ServiceInventories.Add(serviceInventory);
-				}
-				await _context.SaveChangesAsync();
-
-				var inventoryPrices = await _context.Inventories
-					.Where(i => model.InventoryIds.Contains(i.InventoryId))
-					.Select(i => i.Price)
-					.ToListAsync();
-
-				service.InventoryPrice = inventoryPrices.Sum() ?? 0;
-				service.TotalPrice = (service.ServicePrice ?? 0) + service.InventoryPrice;
-				await _context.SaveChangesAsync();
-			}
 
 			return service;
 		}
