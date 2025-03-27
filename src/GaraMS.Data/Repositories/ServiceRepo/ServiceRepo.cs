@@ -39,10 +39,18 @@ namespace GaraMS.Data.Repositories.ServiceRepo
 			service.InventoryPrice += inventory.Price;
 			var servicePromorion = await _context.ServicePromotions.Include(si => si.Promotion)
 				.FirstOrDefaultAsync(si => si.ServiceId == serviceId);
-			service.Promotion = (service.ServicePrice + service.InventoryPrice) * (servicePromorion.Promotion.DiscountPercent / 100);
+			if(servicePromorion != null)
+			{
+                service.Promotion = (service.ServicePrice + service.InventoryPrice) * (servicePromorion.Promotion.DiscountPercent / 100);
+                service.TotalPrice = (service.ServicePrice + service.InventoryPrice) - service.Promotion;
+            }
+			else
+			{
+				service.TotalPrice = (service.ServicePrice + service.InventoryPrice);
 
-			service.TotalPrice = (service.ServicePrice + service.InventoryPrice) - service.Promotion;
-			_context.Services.Update(service);
+            }
+
+				_context.Services.Update(service);
 			await _context.SaveChangesAsync();
 			await UpdateInventoryPriceAsync(serviceId);
 			return true;
