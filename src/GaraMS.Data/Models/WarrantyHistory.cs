@@ -29,5 +29,4 @@ public partial class WarrantyHistory
     [ForeignKey("ServiceId")]
     [InverseProperty("WarrantyHistories")]
     public virtual Service Service { get; set; }
-
 }

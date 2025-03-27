@@ -36,6 +36,10 @@ public partial class GaraManagementSystemContext : DbContext
 
     public virtual DbSet<Inventory> Inventories { get; set; }
 
+    public virtual DbSet<InventoryInvoice> InventoryInvoices { get; set; }
+
+    public virtual DbSet<InventoryInvoiceDetail> InventoryInvoiceDetails { get; set; }
+
     public virtual DbSet<InventorySupplier> InventorySuppliers { get; set; }
 
     public virtual DbSet<Invoice> Invoices { get; set; }
@@ -85,36 +89,36 @@ public partial class GaraManagementSystemContext : DbContext
     {
         modelBuilder.Entity<Appointment>(entity =>
         {
-            entity.HasKey(e => e.AppointmentId).HasName("PK__Appointm__8ECDFCC2FCA8E727");
+            entity.HasKey(e => e.AppointmentId).HasName("PK__Appointm__8ECDFCC211D5B523");
 
             entity.ToTable(tb => tb.HasTrigger("trg_CreateInvoiceOnAppointmentAccepted"));
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
 
-            entity.HasOne(d => d.AppointmentStatus).WithMany(p => p.Appointments).HasConstraintName("FK__Appointme__Appoi__59FA5E80");
+            entity.HasOne(d => d.AppointmentStatus).WithMany(p => p.Appointments).HasConstraintName("FK__Appointme__Appoi__7F2BE32F");
 
-            entity.HasOne(d => d.Vehicle).WithMany(p => p.Appointments).HasConstraintName("FK__Appointme__Vehic__59063A47");
+            entity.HasOne(d => d.Vehicle).WithMany(p => p.Appointments).HasConstraintName("FK__Appointme__Vehic__7E37BEF6");
         });
 
         modelBuilder.Entity<AppointmentService>(entity =>
         {
-            entity.HasKey(e => e.AppointmentServiceId).HasName("PK__Appointm__3B38F39691E228EB");
+            entity.HasKey(e => e.AppointmentServiceId).HasName("PK__Appointm__3B38F396E7D71073");
 
-            entity.HasOne(d => d.Appointment).WithMany(p => p.AppointmentServices).HasConstraintName("FK__Appointme__Appoi__71D1E811");
+            entity.HasOne(d => d.Appointment).WithMany(p => p.AppointmentServices).HasConstraintName("FK__Appointme__Appoi__17036CC0");
 
-            entity.HasOne(d => d.Employee).WithMany(p => p.AppointmentServices).HasConstraintName("FK__Appointme__Emplo__72C60C4A");
+            entity.HasOne(d => d.Employee).WithMany(p => p.AppointmentServices).HasConstraintName("FK__Appointme__Emplo__17F790F9");
 
-            entity.HasOne(d => d.Service).WithMany(p => p.AppointmentServices).HasConstraintName("FK__Appointme__Servi__70DDC3D8");
+            entity.HasOne(d => d.Service).WithMany(p => p.AppointmentServices).HasConstraintName("FK__Appointme__Servi__160F4887");
         });
 
         modelBuilder.Entity<AppointmentStatus>(entity =>
         {
-            entity.HasKey(e => e.AppointmentStatusId).HasName("PK__Appointm__A619B66097E57D98");
+            entity.HasKey(e => e.AppointmentStatusId).HasName("PK__Appointm__A619B6607CB15C50");
         });
 
         modelBuilder.Entity<Category>(entity =>
         {
-            entity.HasKey(e => e.CategoryId).HasName("PK__Categori__19093A0B81A9ECD3");
+            entity.HasKey(e => e.CategoryId).HasName("PK__Categori__19093A0BDF752DCD");
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.Status).HasDefaultValue(true);
@@ -122,129 +126,147 @@ public partial class GaraManagementSystemContext : DbContext
 
         modelBuilder.Entity<Customer>(entity =>
         {
-            entity.HasKey(e => e.CustomerId).HasName("PK__Customer__A4AE64D86F82ADF6");
+            entity.HasKey(e => e.CustomerId).HasName("PK__Customer__A4AE64D87FFD68AD");
 
-            entity.HasOne(d => d.User).WithMany(p => p.Customers).HasConstraintName("FK__Customers__UserI__4CA06362");
+            entity.HasOne(d => d.User).WithMany(p => p.Customers).HasConstraintName("FK__Customers__UserI__71D1E811");
         });
 
         modelBuilder.Entity<Employee>(entity =>
         {
-            entity.HasKey(e => e.EmployeeId).HasName("PK__Employee__7AD04F11F2751B30");
+            entity.HasKey(e => e.EmployeeId).HasName("PK__Employee__7AD04F116CA3B201");
 
-            entity.HasOne(d => d.Specialized).WithMany(p => p.Employees).HasConstraintName("FK__Employees__Speci__48CFD27E");
+            entity.HasOne(d => d.Specialized).WithMany(p => p.Employees).HasConstraintName("FK__Employees__Speci__6E01572D");
 
-            entity.HasOne(d => d.User).WithMany(p => p.Employees).HasConstraintName("FK__Employees__UserI__49C3F6B7");
+            entity.HasOne(d => d.User).WithMany(p => p.Employees).HasConstraintName("FK__Employees__UserI__6EF57B66");
         });
 
         modelBuilder.Entity<Feedback>(entity =>
         {
-            entity.HasKey(e => e.FeedbackId).HasName("PK__Feedback__6A4BEDD6CD5EBCF0");
+            entity.HasKey(e => e.FeedbackId).HasName("PK__Feedback__6A4BEDD671BA8173");
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
         });
 
         modelBuilder.Entity<Gara>(entity =>
         {
-            entity.HasKey(e => e.GaraId).HasName("PK__Gara__E6DDAA6034E40B38");
+            entity.HasKey(e => e.GaraId).HasName("PK__Gara__E6DDAA6082930AD0");
 
-            entity.HasOne(d => d.User).WithMany(p => p.Garas).HasConstraintName("FK__Gara__UserId__412EB0B6");
+            entity.HasOne(d => d.User).WithMany(p => p.Garas).HasConstraintName("FK__Gara__UserId__66603565");
         });
 
         modelBuilder.Entity<Inventory>(entity =>
         {
-            entity.HasKey(e => e.InventoryId).HasName("PK__Inventor__F5FDE6B385BA85B2");
+            entity.HasKey(e => e.InventoryId).HasName("PK__Inventor__F5FDE6B354245159");
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.Status).HasDefaultValue(true);
+        });
+
+        modelBuilder.Entity<InventoryInvoice>(entity =>
+        {
+            entity.HasKey(e => e.InventoryInvoiceId).HasName("PK__Inventor__7678E42FBCBB7C9E");
+
+            entity.Property(e => e.Date).HasDefaultValueSql("(getdate())");
+
+            entity.HasOne(d => d.User).WithMany(p => p.InventoryInvoices).HasConstraintName("FK_InventoryInvoice_User");
+        });
+
+        modelBuilder.Entity<InventoryInvoiceDetail>(entity =>
+        {
+            entity.HasKey(e => e.InventoryInvoiceDetailId).HasName("PK__Inventor__1B9F5647CA4B0DA8");
+
+            entity.HasOne(d => d.Inventory).WithMany(p => p.InventoryInvoiceDetails).HasConstraintName("FK__Inventory__Inven__65370702");
+
+            entity.HasOne(d => d.InventoryInvoice).WithMany(p => p.InventoryInvoiceDetails).HasConstraintName("FK__Inventory__Inven__662B2B3B");
         });
 
         modelBuilder.Entity<InventorySupplier>(entity =>
         {
-            entity.HasKey(e => e.InventorySupplierId).HasName("PK__Inventor__92729B623469FEDA");
+            entity.HasKey(e => e.InventorySupplierId).HasName("PK__Inventor__92729B627EA37B83");
 
-            entity.HasOne(d => d.Inventory).WithMany(p => p.InventorySuppliers).HasConstraintName("FK__Inventory__Inven__0E6E26BF");
+            entity.HasOne(d => d.Inventory).WithMany(p => p.InventorySuppliers).HasConstraintName("FK__Inventory__Inven__339FAB6E");
 
-            entity.HasOne(d => d.Supplier).WithMany(p => p.InventorySuppliers).HasConstraintName("FK__Inventory__Suppl__0F624AF8");
+            entity.HasOne(d => d.Supplier).WithMany(p => p.InventorySuppliers).HasConstraintName("FK__Inventory__Suppl__3493CFA7");
         });
 
         modelBuilder.Entity<Invoice>(entity =>
         {
-            entity.HasKey(e => e.InvoiceId).HasName("PK__Invoices__D796AAB5A5E2D91C");
+            entity.HasKey(e => e.InvoiceId).HasName("PK__Invoices__D796AAB5AD69767E");
 
             entity.Property(e => e.Date).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.TotalAmount).HasDefaultValue(0m);
 
-            entity.HasOne(d => d.Appointment).WithOne(p => p.Invoice).HasConstraintName("FK__Invoices__Appoin__5DCAEF64");
+            entity.HasOne(d => d.Appointment).WithOne(p => p.Invoice).HasConstraintName("FK__Invoices__Appoin__02FC7413");
 
-            entity.HasOne(d => d.Customer).WithMany(p => p.Invoices).HasConstraintName("FK__Invoices__Custom__5EBF139D");
+            entity.HasOne(d => d.Customer).WithMany(p => p.Invoices).HasConstraintName("FK__Invoices__Custom__03F0984C");
         });
 
         modelBuilder.Entity<Manager>(entity =>
         {
-            entity.HasKey(e => e.ManagerId).HasName("PK__Manager__3BA2AAE195E095F0");
+            entity.HasKey(e => e.ManagerId).HasName("PK__Manager__3BA2AAE1B77399BF");
 
-            entity.HasOne(d => d.User).WithMany(p => p.Managers).HasConstraintName("FK__Manager__UserId__440B1D61");
+            entity.HasOne(d => d.User).WithMany(p => p.Managers).HasConstraintName("FK__Manager__UserId__693CA210");
         });
 
         modelBuilder.Entity<Promotion>(entity =>
         {
-            entity.HasKey(e => e.PromotionId).HasName("PK__Promotio__52C42FCFB9FC9FC1");
+            entity.HasKey(e => e.PromotionId).HasName("PK__Promotio__52C42FCFE5A94500");
         });
 
         modelBuilder.Entity<Report>(entity =>
         {
-            entity.HasKey(e => e.ReportId).HasName("PK__Reports__D5BD48054C5E7D3F");
+            entity.HasKey(e => e.ReportId).HasName("PK__Reports__D5BD480525B5CCF6");
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
 
-            entity.HasOne(d => d.Customer).WithMany(p => p.Reports).HasConstraintName("FK__Reports__Custome__656C112C");
+            entity.HasOne(d => d.Customer).WithMany(p => p.Reports).HasConstraintName("FK__Reports__Custome__0A9D95DB");
         });
 
         modelBuilder.Entity<Service>(entity =>
         {
-            entity.HasKey(e => e.ServiceId).HasName("PK__Services__C51BB00A2AA17056");
+            entity.HasKey(e => e.ServiceId).HasName("PK__Services__C51BB00AD9C0C41E");
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.Status).HasDefaultValue(true);
 
-            entity.HasOne(d => d.Category).WithMany(p => p.Services).HasConstraintName("FK__Services__Catego__6E01572D");
+            entity.HasOne(d => d.Category).WithMany(p => p.Services).HasConstraintName("FK__Services__Catego__1332DBDC");
         });
 
         modelBuilder.Entity<ServiceEmployee>(entity =>
         {
-            entity.HasKey(e => e.ServiceEmployeeId).HasName("PK__ServiceE__3FAF6506CE63015D");
+            entity.HasKey(e => e.ServiceEmployeeId).HasName("PK__ServiceE__3FAF650601D812E3");
 
-            entity.HasOne(d => d.Employee).WithMany(p => p.ServiceEmployees).HasConstraintName("FK__ServiceEm__Emplo__7A672E12");
+            entity.HasOne(d => d.Employee).WithMany(p => p.ServiceEmployees).HasConstraintName("FK__ServiceEm__Emplo__1F98B2C1");
 
-            entity.HasOne(d => d.Service).WithMany(p => p.ServiceEmployees).HasConstraintName("FK__ServiceEm__Servi__797309D9");
+            entity.HasOne(d => d.Service).WithMany(p => p.ServiceEmployees).HasConstraintName("FK__ServiceEm__Servi__1EA48E88");
         });
 
         modelBuilder.Entity<ServiceInventory>(entity =>
         {
-            entity.HasKey(e => e.ServiceInventoryId).HasName("PK__ServiceI__0EF8880373DDC9D6");
+            entity.HasKey(e => e.ServiceInventoryId).HasName("PK__ServiceI__0EF88803D8FE9B41");
 
-            entity.HasOne(d => d.Inventory).WithMany(p => p.ServiceInventories).HasConstraintName("FK__ServiceIn__Inven__06CD04F7");
+            entity.HasOne(d => d.Inventory).WithMany(p => p.ServiceInventories).HasConstraintName("FK__ServiceIn__Inven__2BFE89A6");
 
-            entity.HasOne(d => d.Service).WithMany(p => p.ServiceInventories).HasConstraintName("FK__ServiceIn__Servi__07C12930");
+            entity.HasOne(d => d.Service).WithMany(p => p.ServiceInventories).HasConstraintName("FK__ServiceIn__Servi__2CF2ADDF");
         });
 
         modelBuilder.Entity<ServicePromotion>(entity =>
         {
-            entity.HasKey(e => e.ServicePromotionId).HasName("PK__ServiceP__E30198398C6E55D0");
+            entity.HasKey(e => e.ServicePromotionId).HasName("PK__ServiceP__E3019839C5C30186");
 
-            entity.HasOne(d => d.Promotion).WithMany(p => p.ServicePromotions).HasConstraintName("FK__ServicePr__Promo__00200768");
+            entity.HasOne(d => d.Promotion).WithMany(p => p.ServicePromotions).HasConstraintName("FK__ServicePr__Promo__25518C17");
 
-            entity.HasOne(d => d.Service).WithMany(p => p.ServicePromotions).HasConstraintName("FK__ServicePr__Servi__7F2BE32F");
+            entity.HasOne(d => d.Service).WithMany(p => p.ServicePromotions).HasConstraintName("FK__ServicePr__Servi__245D67DE");
         });
 
         modelBuilder.Entity<Specialized>(entity =>
         {
-            entity.HasKey(e => e.SpecializedId).HasName("PK__Speciali__D22EFDA3E7A90BF5");
+            entity.HasKey(e => e.SpecializedId).HasName("PK__Speciali__D22EFDA3C634A7EC");
         });
 
         modelBuilder.Entity<Supplier>(entity =>
         {
-            entity.HasKey(e => e.SupplierId).HasName("PK__Supplier__4BE666B4BE39F4E6");
+            entity.HasKey(e => e.SupplierId).HasName("PK__Supplier__4BE666B41335548B");
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.Status).HasDefaultValue(true);
@@ -252,33 +274,33 @@ public partial class GaraManagementSystemContext : DbContext
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.UserId).HasName("PK__Users__1788CC4C505A7878");
+            entity.HasKey(e => e.UserId).HasName("PK__Users__1788CC4CC5BC7928");
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.Status).HasDefaultValue(true);
 
-            entity.HasOne(d => d.Role).WithMany(p => p.Users).HasConstraintName("FK__Users__RoleID__3D5E1FD2");
+            entity.HasOne(d => d.Role).WithMany(p => p.Users).HasConstraintName("FK__Users__RoleID__628FA481");
         });
 
         modelBuilder.Entity<UserRole>(entity =>
         {
-            entity.HasKey(e => e.RoleId).HasName("PK__UserRole__8AFACE1A45567A7B");
+            entity.HasKey(e => e.RoleId).HasName("PK__UserRole__8AFACE1A74DDEC10");
         });
 
         modelBuilder.Entity<Vehicle>(entity =>
         {
-            entity.HasKey(e => e.VehicleId).HasName("PK__Vehicles__476B5492F8D6512C");
+            entity.HasKey(e => e.VehicleId).HasName("PK__Vehicles__476B549211F28E96");
 
-            entity.HasOne(d => d.Customer).WithMany(p => p.Vehicles).HasConstraintName("FK__Vehicles__Custom__5070F446");
+            entity.HasOne(d => d.Customer).WithMany(p => p.Vehicles).HasConstraintName("FK__Vehicles__Custom__75A278F5");
         });
 
         modelBuilder.Entity<WarrantyHistory>(entity =>
         {
-            entity.HasKey(e => e.WarrantyHistoryId).HasName("PK__Warranty__5D65AB487E7FDCBD");
+            entity.HasKey(e => e.WarrantyHistoryId).HasName("PK__Warranty__5D65AB4818F0D9DE");
 
             entity.Property(e => e.Status).HasDefaultValue(true);
 
-            entity.HasOne(d => d.Service).WithMany(p => p.WarrantyHistories).HasConstraintName("FK__WarrantyH__Servi__76969D2E");
+            entity.HasOne(d => d.Service).WithMany(p => p.WarrantyHistories).HasConstraintName("FK__WarrantyH__Servi__1BC821DD");
         });
 
         OnModelCreatingPartial(modelBuilder);

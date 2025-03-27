@@ -10,7 +10,7 @@ namespace GaraMS.Data.Models;
 
 public partial class Inventory
 {
-	[Key]
+    [Key]
     public int InventoryId { get; set; }
 
     [Required]
@@ -34,8 +34,11 @@ public partial class Inventory
     public DateTime? UpdatedAt { get; set; }
 
     [InverseProperty("Inventory")]
+    public virtual ICollection<InventoryInvoiceDetail> InventoryInvoiceDetails { get; set; } = new List<InventoryInvoiceDetail>();
+
+    [InverseProperty("Inventory")]
     public virtual ICollection<InventorySupplier> InventorySuppliers { get; set; } = new List<InventorySupplier>();
 
-	[InverseProperty("Inventory")]
+    [InverseProperty("Inventory")]
     public virtual ICollection<ServiceInventory> ServiceInventories { get; set; } = new List<ServiceInventory>();
 }

@@ -61,7 +61,7 @@ public partial class Service
     public virtual ICollection<ServiceEmployee> ServiceEmployees { get; set; } = new List<ServiceEmployee>();
 
     [InverseProperty("Service")]
-    public virtual ICollection<ServiceInventory> ServiceInventories { get; set; }
+    public virtual ICollection<ServiceInventory> ServiceInventories { get; set; } = new List<ServiceInventory>();
 
     [InverseProperty("Service")]
     public virtual ICollection<ServicePromotion> ServicePromotions { get; set; } = new List<ServicePromotion>();

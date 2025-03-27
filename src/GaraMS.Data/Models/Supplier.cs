@@ -40,5 +40,5 @@ public partial class Supplier
     public DateTime? UpdatedAt { get; set; }
 
     [InverseProperty("Supplier")]
-    public virtual ICollection<InventorySupplier> InventorySuppliers { get; set; }
+    public virtual ICollection<InventorySupplier> InventorySuppliers { get; set; } = new List<InventorySupplier>();
 }
