@@ -74,12 +74,12 @@ namespace GaraMS.API.Controllers
 
             foreach (var item in inventoryInvoiceDetails)
             {
-                var inven = await _context.Inventories.AsNoTracking().FirstOrDefaultAsync(x => x.InventoryId == item.InventoryId);
+                var inven = await _context.Inventories.AsNoTracking().FirstOrDefaultAsync(x => x.InventoryId == inventoryId);
                 if (inven != null)
                 {
                     var inventorys = await _context.InventoryInvoiceDetails.Include(x => x.Inventory)
                 .Include(x => x.InventoryInvoice).ThenInclude(x => x.User)
-                .Where(x => (x.InventoryInvoice.UserId == useid && x.InventoryInvoice.Status != "False" && x.InventoryId == inven.InventoryId)).ToListAsync();
+                .Where(x => (x.InventoryInvoice.UserId == useid && x.InventoryInvoice.Status != "False" && x.InventoryId == inventoryId)).ToListAsync();
                     if (int.Parse(inven.Unit) <= inventorys.Count())
                     {
                         return NotFound("hết để thêm Inventory.");
