@@ -96,7 +96,10 @@ namespace GaraMS.Data.Repositories.ServiceRepo
 
 		public async Task<Service> GetServiceByIdAsync(int id)
 		{
-			return await _context.Services.FirstOrDefaultAsync(s => s.ServiceId == id);
+			return await _context.Services
+		.Include(s => s.ServiceInventories)
+			.ThenInclude(si => si.Inventory)
+		.FirstOrDefaultAsync(s => s.ServiceId == id);
 		}
 
 		public async Task<bool> RemoveInventoryFromServiceAsync(int inventoryId, int serviceId)
