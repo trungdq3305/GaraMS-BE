@@ -145,10 +145,18 @@ namespace GaraMS.Data.Repositories.ServiceRepo
 			service.Description = model.Description;
 			service.UpdatedAt = DateTime.UtcNow;
 			service.Promotion = (service.ServicePrice + service.InventoryPrice) * percent;
+			if(service.Promotion != null)
+			{
+                service.TotalPrice = ((service.ServicePrice ?? 0) + (service.InventoryPrice ?? 0)) * (1 - percent);
+            }
+			else
+			{
+				service.TotalPrice = (service.ServicePrice ?? 0) + (service.InventoryPrice ?? 0);
 
-            service.TotalPrice = ((service.ServicePrice ?? 0) + (service.InventoryPrice ?? 0))*(1-percent) ;
+            }
 
-			_context.Services.Update(service);
+
+				_context.Services.Update(service);
 			await _context.SaveChangesAsync();
 			return service;
 		}
