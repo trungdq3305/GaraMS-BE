@@ -115,9 +115,31 @@ namespace GaraMS.API.Controllers
             }
 
             var inventoryInvoices = await _context.InventoryInvoices
-                .Include(x => x.User) // Nếu cần thông tin User
-                .Include(x => x.InventoryInvoiceDetails) // Include danh sách chi tiết hóa đơn
-                .ThenInclude(d => d.Inventory) // Nếu muốn lấy thông tin Inventory của từng chi tiết
+                .Include(x => x.User)
+                .Include(x => x.InventoryInvoiceDetails)
+                .ThenInclude(d => d.Inventory)
+                .Where(x => (x.Status == "False"))
+                .ToListAsync();
+
+            return Ok(inventoryInvoices);
+        }
+        [HttpGet("of-customer")]
+        public async Task<IActionResult> GetAllUserInventoryInvoices()
+        {
+            var token = Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+            var decodeModel = _token.decode(token);
+            var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 1 });
+            var useid = Convert.ToInt32(decodeModel.userid);
+            if (!isValidRole)
+            {
+                return Unauthorized("Bạn không có quyền truy cập.");
+            }
+
+            var inventoryInvoices = await _context.InventoryInvoices
+                .Include(x => x.User)
+                .Include(x => x.InventoryInvoiceDetails)
+                .ThenInclude(d => d.Inventory)
+                .Where(x => (x.Status == "False" && x.UserId == useid))
                 .ToListAsync();
 
             return Ok(inventoryInvoices);
