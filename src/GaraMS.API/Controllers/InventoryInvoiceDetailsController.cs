@@ -82,7 +82,7 @@ namespace GaraMS.API.Controllers
                 .Where(x => (x.InventoryInvoice.UserId == useid && x.InventoryInvoice.Status != "False" && x.InventoryId == inven.InventoryId)).ToListAsync();
                     if (int.Parse(inven.Unit) <= inventorys.Count())
                     {
-                        return NotFound("Hết Inventory.");
+                        return NotFound("hết để thêm Inventory.");
                     }
                     
                 }
