@@ -138,14 +138,15 @@ namespace GaraMS.Data.Repositories.ServiceRepo
 		{
 			var service = await _context.Services.FindAsync(id);
 			if (service == null) return null;
-			var percent = service.Promotion / service.TotalPrice;
+			var percent = service.Promotion / (service.ServicePrice + service.InventoryPrice);
 
 			service.ServiceName = model.ServiceName;
 			service.ServicePrice = model.ServicePrice;
 			service.Description = model.Description;
 			service.UpdatedAt = DateTime.UtcNow;
+			service.Promotion = (service.ServicePrice + service.InventoryPrice) * percent;
 
-			service.TotalPrice = ((service.ServicePrice ?? 0) + (service.InventoryPrice ?? 0))*(1-percent) ;
+            service.TotalPrice = ((service.ServicePrice ?? 0) + (service.InventoryPrice ?? 0))*(1-percent) ;
 
 			_context.Services.Update(service);
 			await _context.SaveChangesAsync();
