@@ -8,8 +8,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GaraMS.Data.Models;
 
-[Index("Email", Name = "UQ__Users__A9D105346A924E00", IsUnique = true)]
-[Index("UserName", Name = "UQ__Users__C9F28456B0F3299C", IsUnique = true)]
+[Index("Email", Name = "UQ__Users__A9D10534D44B0854", IsUnique = true)]
+[Index("UserName", Name = "UQ__Users__C9F28456327A5883", IsUnique = true)]
 public partial class User
 {
     [Key]
@@ -54,6 +54,9 @@ public partial class User
 
     [InverseProperty("User")]
     public virtual ICollection<Gara> Garas { get; set; } = new List<Gara>();
+
+    [InverseProperty("User")]
+    public virtual ICollection<InventoryInvoice> InventoryInvoices { get; set; } = new List<InventoryInvoice>();
 
     [InverseProperty("User")]
     public virtual ICollection<Manager> Managers { get; set; } = new List<Manager>();

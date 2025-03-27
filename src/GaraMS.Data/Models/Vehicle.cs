@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GaraMS.Data.Models;
 
-[Index("PlateNumber", Name = "UQ__Vehicles__036926247006BD80", IsUnique = true)]
+[Index("PlateNumber", Name = "UQ__Vehicles__0369262456B77070", IsUnique = true)]
 public partial class Vehicle
 {
     [Key]

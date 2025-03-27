@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GaraMS.Data.Models;
 
-[Index("AppointmentId", Name = "UQ__Invoices__8ECDFCC30ACE1031", IsUnique = true)]
+[Index("AppointmentId", Name = "UQ__Invoices__8ECDFCC3E9748FC0", IsUnique = true)]
 public partial class Invoice
 {
     [Key]

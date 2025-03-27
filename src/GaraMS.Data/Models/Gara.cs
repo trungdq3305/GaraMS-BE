@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 namespace GaraMS.Data.Models;
 
 [Table("Gara")]
-[Index("GaraNumber", Name = "UQ__Gara__8CEDF0470C826552", IsUnique = true)]
+[Index("GaraNumber", Name = "UQ__Gara__8CEDF0471DB4FF3A", IsUnique = true)]
 public partial class Gara
 {
     [Key]
