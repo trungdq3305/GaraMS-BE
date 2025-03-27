@@ -19,6 +19,7 @@ namespace GaraMS.API.Controllers
         private readonly IConfiguration _config;
         private readonly GaraManagementSystemContext _context;
 
+
         public InvoiceController(IAppointmentRepo appointmentRepo,IInvoicesService invoiceService, GaraManagementSystemContext context, IConfiguration config)
         {
             _appointmentRepo = appointmentRepo;
