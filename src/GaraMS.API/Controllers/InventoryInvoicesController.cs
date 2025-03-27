@@ -45,7 +45,7 @@ namespace GaraMS.API.Controllers
             }
             var inventoryInvoiceDetails = await _context.InventoryInvoiceDetails.Include(x => x.Inventory)
                 .Include(x => x.InventoryInvoice).ThenInclude(x => x.User)
-                .Where(x => (x.InventoryInvoice.UserId == useid)).ToListAsync();
+                .Where(x => (x.InventoryInvoice.UserId == useid && x.InventoryInvoice.Status != "False")).ToListAsync();
             decimal? total = 0;
             foreach (var item in inventoryInvoiceDetails)
             {
@@ -82,7 +82,7 @@ namespace GaraMS.API.Controllers
             }
             var inventoryInvoiceDetails = await _context.InventoryInvoiceDetails.Include(x => x.Inventory)
                 .Include(x => x.InventoryInvoice).ThenInclude(x => x.User)
-                .Where(x => (x.InventoryInvoice.UserId == useid)).ToListAsync();
+                .Where(x => (x.InventoryInvoice.UserId == useid && x.InventoryInvoice.Status != "False")).ToListAsync();
             decimal? total = 0;
             foreach (var item in inventoryInvoiceDetails)
             {
