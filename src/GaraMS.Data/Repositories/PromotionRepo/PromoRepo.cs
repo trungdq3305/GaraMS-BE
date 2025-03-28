@@ -67,6 +67,11 @@ namespace GaraMS.Data.Repository
                 existingPromotion.DiscountPercent = promotion.DiscountPercent;
 
                 _context.Promotions.Update(existingPromotion);
+
+                var a = await _context.Services.FirstOrDefaultAsync(x => x.ServicePromotions == existingPromotion);
+                a.Promotion = existingPromotion.DiscountPercent * a.TotalPrice;
+                a.TotalPrice = ((a.ServicePrice ?? 0) + (a.InventoryPrice ?? 0) - a.Promotion);
+                _context.Services.Update(a);
                 await _context.SaveChangesAsync();
                 return true;
             }
@@ -219,6 +224,11 @@ namespace GaraMS.Data.Repository
                     
                 if (existingRelation == null)
                 {
+                    var servicePromotions = await _context.ServicePromotions
+    .Where(x => x.ServiceId == serviceId)
+    .ToListAsync();
+
+                    _context.ServicePromotions.RemoveRange(servicePromotions);
                     // Create new relationship
                     var servicePromotion = new ServicePromotion
                     {
@@ -227,6 +237,8 @@ namespace GaraMS.Data.Repository
                     };
                     
                     _context.ServicePromotions.Add(servicePromotion);
+                    
+
                 }
                 
                 // Calculate and apply the promotion
