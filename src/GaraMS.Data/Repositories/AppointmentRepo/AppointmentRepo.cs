@@ -19,38 +19,62 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
 			_context = context;
 		}
 
-		public async Task<Appointment> CreateAppointmentAsync(AppointmentModel model)
-		{
-			var appointment = new Appointment
-			{
-				Date = model.Date,
-				Note = model.Note,
-				Status = "Pending",
-				CreatedAt = DateTime.UtcNow,
-				UpdatedAt = DateTime.UtcNow,
-				VehicleId = model.VehicleId
-			};
+        public async Task<Appointment> CreateAppointmentAsync(AppointmentModel model)
+        {
+            // Kiểm tra nếu danh sách dịch vụ rỗng
+            if (model.ServiceIds == null || !model.ServiceIds.Any())
+            {
+                throw new Exception("Bạn phải chọn ít nhất một dịch vụ.");
+            }
 
-			_context.Appointments.Add(appointment);
-			await _context.SaveChangesAsync();
+            // Kiểm tra tồn kho trước khi tạo cuộc hẹn
+            foreach (var serviceId in model.ServiceIds)
+            {
+                var serviceInventories = await _context.ServiceInventories
+                    .Include(si => si.Inventory)
+                    .Where(si => si.ServiceId == serviceId)
+                    .ToListAsync();
 
-			// Adding services to the appointment
-			if (model.ServiceIds != null && model.ServiceIds.Any())
-			{
-				foreach (var serviceId in model.ServiceIds)
-				{
-					_context.AppointmentServices.Add(new AppointmentService
-					{
-						AppointmentId = appointment.AppointmentId,
-						ServiceId = serviceId
-					});
-				}
-				await _context.SaveChangesAsync();
-			}
-			return appointment;
-		}
+                foreach (var item in serviceInventories)
+                {
+                    if (int.Parse(item.Inventory.Unit) <= 0)
+                    {
+                        throw new Exception($"Tồn kho cho dịch vụ ID {serviceId} không đủ.");
+                    }
+                }
+            }
 
-		public async Task<Appointment> DeleteAppointmentAsync(int id)
+            // Nếu kiểm tra xong không có lỗi, bắt đầu thêm appointment
+            var appointment = new Appointment
+            {
+                Date = model.Date,
+                Note = model.Note,
+                Status = "Pending",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                VehicleId = model.VehicleId
+            };
+
+            _context.Appointments.Add(appointment);
+            await _context.SaveChangesAsync(); // Lưu appointment để lấy AppointmentId
+
+            // Thêm danh sách dịch vụ vào cuộc hẹn
+            foreach (var serviceId in model.ServiceIds)
+            {
+                _context.AppointmentServices.Add(new AppointmentService
+                {
+                    AppointmentId = appointment.AppointmentId,
+                    ServiceId = serviceId
+                });
+            }
+
+            await _context.SaveChangesAsync(); // Lưu các dịch vụ đã chọn
+
+            return appointment;
+        }
+
+
+        public async Task<Appointment> DeleteAppointmentAsync(int id)
 		{
 			var appointment = await _context.Appointments.FindAsync(id);
 			if (appointment == null) return null;

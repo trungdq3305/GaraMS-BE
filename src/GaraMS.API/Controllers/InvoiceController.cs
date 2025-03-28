@@ -119,18 +119,16 @@ namespace GaraMS.API.Controllers
                         var response = await _invoiceService.CapturePayment(token);
                         Console.WriteLine($"Capture payment response: {JsonSerializer.Serialize(response)}");
 
-                        if (response != null)
+                        if (response != null && int.TryParse(response.ReferenceId, out int invoiceId))
                         {
-                            var invoiceId = int.Parse(response.ReferenceId);
                             Console.WriteLine($"Processing invoice ID: {invoiceId}");
 
                             var invoice = await _context.Invoices
                                 .Include(i => i.Appointment)
-                                .ThenInclude(i => i.AppointmentServices)
-                                .ThenInclude(i => i.Service)
+                                .ThenInclude(a => a.AppointmentServices)
+                                .ThenInclude(s => s.Service)
                                 .Include(i => i.Customer)
-                                .Where(i => i.InvoiceId == invoiceId)
-                                .FirstOrDefaultAsync();
+                                .FirstOrDefaultAsync(i => i.InvoiceId == invoiceId);
 
                             if (invoice != null)
                             {
@@ -140,10 +138,35 @@ namespace GaraMS.API.Controllers
                                 if (invoice.Appointment != null)
                                 {
                                     invoice.Appointment.Status = "Paid";
+
+                                    var appointmentServices = await _context.AppointmentServices
+                                        .Where(a => a.AppointmentId == invoice.AppointmentId)
+                                        .ToListAsync();
+
+                                    var serviceIds = appointmentServices.Select(a => a.ServiceId).Distinct().ToList();
+                                    var serviceInventories = await _context.ServiceInventories
+                                        .Where(si => serviceIds.Contains(si.ServiceId))
+                                        .ToListAsync();
+
+                                    var inventoryIds = serviceInventories.Select(si => si.InventoryId).Distinct().ToList();
+                                    var inventories = await _context.Inventories
+                                        .Where(inv => inventoryIds.Contains(inv.InventoryId))
+                                        .ToListAsync();
+
+                                    foreach (var inventory in inventories)
+                                    {
+                                        if (int.TryParse(inventory.Unit, out int currentUnits) && currentUnits > 0)
+                                        {
+                                            inventory.Unit = (currentUnits - 1).ToString();
+                                            _context.Inventories.Update(inventory);
+                                        }
+                                    }
                                 }
+
                                 _context.Invoices.Update(invoice);
                                 _context.Appointments.Update(invoice.Appointment);
                                 await _context.SaveChangesAsync();
+
                                 Console.WriteLine($"Successfully updated invoice {invoiceId} and appointment");
                                 return Ok(invoice);
                             }
@@ -154,8 +177,9 @@ namespace GaraMS.API.Controllers
                         }
                         else
                         {
-                            Console.WriteLine("Capture payment response is null");
+                            Console.WriteLine("Capture payment response is null or invalid");
                         }
+
                     }
                     catch (Exception ex)
                     {
