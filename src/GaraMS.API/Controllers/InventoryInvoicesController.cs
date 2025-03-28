@@ -207,7 +207,11 @@ namespace GaraMS.API.Controllers
         {
             try
             {
-                var a = await _context.InventoryInvoices.FirstOrDefaultAsync(x => x.Status != "False");
+                var token = Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+                var decodeModel = _token.decode(token);
+                var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 1 });
+                var useid = Convert.ToInt32(decodeModel.userid);
+                var a = await _context.InventoryInvoices.FirstOrDefaultAsync(x => (x.Status != "False" && x.UserId == useid));
                 var iiId = a.InventoryInvoiceId;
                 decimal totalAmount = (decimal)a.TotalAmount;
 
