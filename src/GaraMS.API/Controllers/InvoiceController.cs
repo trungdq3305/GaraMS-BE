@@ -148,7 +148,12 @@ namespace GaraMS.API.Controllers
                                         .Where(si => serviceIds.Contains(si.ServiceId))
                                         .ToListAsync();
 
-                                    var inventoryIds = serviceInventories.Select(si => si.InventoryId).Distinct().ToList();
+                                    // Đếm số lần xuất hiện của mỗi InventoryId trong ServiceInventories
+                                    var inventoryUsageCount = serviceInventories
+                                        .GroupBy(si => si.InventoryId)
+                                        .ToDictionary(g => g.Key, g => g.Count());
+
+                                    var inventoryIds = inventoryUsageCount.Keys.ToList();
                                     var inventories = await _context.Inventories
                                         .Where(inv => inventoryIds.Contains(inv.InventoryId))
                                         .ToListAsync();
@@ -157,11 +162,13 @@ namespace GaraMS.API.Controllers
                                     {
                                         if (int.TryParse(inventory.Unit, out int currentUnits) && currentUnits > 0)
                                         {
-                                            inventory.Unit = (currentUnits - 1).ToString();
+                                            int deduction = inventoryUsageCount[inventory.InventoryId]; // Số lần trừ thực tế
+                                            inventory.Unit = Math.Max(currentUnits - deduction, 0).ToString(); // Đảm bảo không âm
                                             _context.Inventories.Update(inventory);
                                         }
                                     }
                                 }
+
 
                                 _context.Invoices.Update(invoice);
                                 _context.Appointments.Update(invoice.Appointment);
