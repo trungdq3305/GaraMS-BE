@@ -24,13 +24,15 @@ namespace GaraMS.Service.Services.UserService
         private readonly ITokenService _token;
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
+        private readonly GaraManagementSystemContext _context;
         public UserService(IUserRepo userRepo,
             ITokenService token,
             IAuthenticateService authenticateService,
             IAccountService accountService,
             IValidateService userValidate,
             IEmailService emailService,
-            IConfiguration configuration
+            IConfiguration configuration,
+            GaraManagementSystemContext context
             )
         {
             _userRepo = userRepo;
@@ -40,6 +42,7 @@ namespace GaraMS.Service.Services.UserService
             _Validate = userValidate;
             _emailService = emailService;
             _configuration = configuration;
+            _context = context;
         }
 
         public async Task<ResultModel> GetLoggedInUser(string token)
@@ -241,6 +244,17 @@ namespace GaraMS.Service.Services.UserService
                 //await _userRepo.UpdateAsync(user);
                 await SendStatusChangeEmail(user);
                 await _userRepo.AddCustomerAsync(newCustomer);
+                var newii = new InventoryInvoice
+                {
+                    Price = 0,
+                    DiliverType = "Pending",
+                    PaymentMethod = "Pending",
+                    TotalAmount = 0,
+                    Status = "True",
+                    UserId = user.UserId,
+                };
+                _context.InventoryInvoices.Add(newii);
+                await _context.SaveChangesAsync();
             }
             if (model.RoleId == 2)
             {
