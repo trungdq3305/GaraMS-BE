@@ -60,7 +60,7 @@ namespace GaraMS.Data.Repository
                 if (existingPromotion == null)
                     return false;
 
-                // Update only specific fields
+                // Cập nhật các trường cần thiết
                 existingPromotion.PromotionName = promotion.PromotionName;
                 existingPromotion.StartDate = promotion.StartDate;
                 existingPromotion.EndDate = promotion.EndDate;
@@ -68,18 +68,31 @@ namespace GaraMS.Data.Repository
 
                 _context.Promotions.Update(existingPromotion);
 
-                var a = await _context.Services.FirstOrDefaultAsync(x => x.ServicePromotions == existingPromotion);
-                a.Promotion = existingPromotion.DiscountPercent * a.TotalPrice;
-                a.TotalPrice = ((a.ServicePrice ?? 0) + (a.InventoryPrice ?? 0) - a.Promotion);
-                _context.Services.Update(a);
+                // Tìm các dịch vụ có liên kết với Promotion
+                var services = await _context.Services
+                    .Where(s => _context.ServicePromotions
+                        .Any(sp => sp.ServiceId == s.ServiceId && sp.PromotionId == existingPromotion.PromotionId))
+                    .ToListAsync();
+
+                // Cập nhật giá cho từng service
+                foreach (var service in services)
+                {
+                    service.Promotion = (existingPromotion.DiscountPercent)/100 * ((service.ServicePrice ?? 0) + (service.InventoryPrice ?? 0));
+                    service.TotalPrice = ((service.ServicePrice ?? 0) + (service.InventoryPrice ?? 0) - service.Promotion);
+                }
+
+                _context.Services.UpdateRange(services);
                 await _context.SaveChangesAsync();
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"Lỗi khi cập nhật promotion: {ex.Message}");
                 return false;
             }
         }
+
+
 
         public async Task<bool> DeletePromotionAsync(int promotionId)
         {
