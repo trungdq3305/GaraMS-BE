@@ -30,6 +30,8 @@ public partial class GaraManagementSystemContext : DbContext
 
     public virtual DbSet<Employee> Employees { get; set; }
 
+    public virtual DbSet<EmployeeShift> EmployeeShifts { get; set; }
+
     public virtual DbSet<Feedback> Feedbacks { get; set; }
 
     public virtual DbSet<Gara> Garas { get; set; }
@@ -59,6 +61,8 @@ public partial class GaraManagementSystemContext : DbContext
     public virtual DbSet<ServiceInventory> ServiceInventories { get; set; }
 
     public virtual DbSet<ServicePromotion> ServicePromotions { get; set; }
+
+    public virtual DbSet<Shift> Shifts { get; set; }
 
     public virtual DbSet<Specialized> Specializeds { get; set; }
 
@@ -98,6 +102,8 @@ public partial class GaraManagementSystemContext : DbContext
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
 
             entity.HasOne(d => d.AppointmentStatus).WithMany(p => p.Appointments).HasConstraintName("FK__Appointme__Appoi__7F2BE32F");
+
+            entity.HasOne(d => d.Employee).WithMany(p => p.Appointments).HasConstraintName("FK_Appointments_Employee");
 
             entity.HasOne(d => d.Vehicle).WithMany(p => p.Appointments).HasConstraintName("FK__Appointme__Vehic__7E37BEF6");
         });
@@ -140,6 +146,15 @@ public partial class GaraManagementSystemContext : DbContext
             entity.HasOne(d => d.Specialized).WithMany(p => p.Employees).HasConstraintName("FK__Employees__Speci__6E01572D");
 
             entity.HasOne(d => d.User).WithMany(p => p.Employees).HasConstraintName("FK__Employees__UserI__6EF57B66");
+        });
+
+        modelBuilder.Entity<EmployeeShift>(entity =>
+        {
+            entity.HasKey(e => e.EmployeeShiftId).HasName("PK__Employee__2FBBBA3392E4CE08");
+
+            entity.HasOne(d => d.Employee).WithMany(p => p.EmployeeShifts).HasConstraintName("FK__EmployeeS__Emplo__72910220");
+
+            entity.HasOne(d => d.Shift).WithMany(p => p.EmployeeShifts).HasConstraintName("FK__EmployeeS__Shift__73852659");
         });
 
         modelBuilder.Entity<Feedback>(entity =>
@@ -270,6 +285,11 @@ public partial class GaraManagementSystemContext : DbContext
             entity.HasOne(d => d.Promotion).WithMany(p => p.ServicePromotions).HasConstraintName("FK__ServicePr__Promo__25518C17");
 
             entity.HasOne(d => d.Service).WithMany(p => p.ServicePromotions).HasConstraintName("FK__ServicePr__Servi__245D67DE");
+        });
+
+        modelBuilder.Entity<Shift>(entity =>
+        {
+            entity.HasKey(e => e.ShiftId).HasName("PK__Shift__C0A8388146679C8E");
         });
 
         modelBuilder.Entity<Specialized>(entity =>

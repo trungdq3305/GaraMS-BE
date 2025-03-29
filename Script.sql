@@ -302,3 +302,23 @@ ADD AppointmentId INT;
 ALTER TABLE InventoryWarranty
 ADD CONSTRAINT FK_InventoryWarranty_Appointment
 FOREIGN KEY (AppointmentId) REFERENCES Appointments(AppointmentId);
+
+ALTER TABLE Appointments
+ADD EmployeeId INT;
+
+ALTER TABLE Appointments
+ADD CONSTRAINT FK_Appointments_Employee FOREIGN KEY (EmployeeId) REFERENCES Employees(EmployeeId);
+
+CREATE TABLE Shift (
+    ShiftId INT IDENTITY(1,1) PRIMARY KEY,
+    StartTime TIME NOT NULL,
+    EndTime TIME NOT NULL
+);
+
+CREATE TABLE EmployeeShift (
+    EmployeeShiftId INT IDENTITY(1,1) PRIMARY KEY,
+    EmployeeId INT FOREIGN KEY REFERENCES Employees(EmployeeId),
+    ShiftId INT FOREIGN KEY REFERENCES Shift(ShiftId),
+    Month INT NOT NULL
+);
+
