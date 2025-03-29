@@ -35,12 +35,18 @@ public partial class Appointment
 
     public int? AppointmentStatusId { get; set; }
 
+    public int? EmployeeId { get; set; }
+
     [InverseProperty("Appointment")]
     public virtual ICollection<AppointmentService> AppointmentServices { get; set; } = new List<AppointmentService>();
 
     [ForeignKey("AppointmentStatusId")]
     [InverseProperty("Appointments")]
     public virtual AppointmentStatus AppointmentStatus { get; set; }
+
+    [ForeignKey("EmployeeId")]
+    [InverseProperty("Appointments")]
+    public virtual Employee Employee { get; set; }
 
     [InverseProperty("Appointment")]
     public virtual ICollection<InventoryWarranty> InventoryWarranties { get; set; } = new List<InventoryWarranty>();

@@ -24,6 +24,12 @@ public partial class Employee
     public virtual ICollection<AppointmentService> AppointmentServices { get; set; } = new List<AppointmentService>();
 
     [InverseProperty("Employee")]
+    public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
+
+    [InverseProperty("Employee")]
+    public virtual ICollection<EmployeeShift> EmployeeShifts { get; set; } = new List<EmployeeShift>();
+
+    [InverseProperty("Employee")]
     public virtual ICollection<ServiceEmployee> ServiceEmployees { get; set; } = new List<ServiceEmployee>();
 
     [ForeignKey("SpecializedId")]

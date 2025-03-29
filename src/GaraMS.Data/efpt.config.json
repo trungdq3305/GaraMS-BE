@@ -39,6 +39,10 @@
          "ObjectType": 0
       },
       {
+         "Name": "[dbo].[EmployeeShift]",
+         "ObjectType": 0
+      },
+      {
          "Name": "[dbo].[Feedbacks]",
          "ObjectType": 0
       },
@@ -96,6 +100,10 @@
       },
       {
          "Name": "[dbo].[Services]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Shift]",
          "ObjectType": 0
       },
       {
