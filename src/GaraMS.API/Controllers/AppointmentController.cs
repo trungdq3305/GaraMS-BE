@@ -79,5 +79,6 @@ namespace GaraMS.API.Controllers
             var res = await _appointmentService.GetAppointmentByLogin(token, new Appointment());
             return StatusCode(res.Code, res);
         }
+
     }
 }
