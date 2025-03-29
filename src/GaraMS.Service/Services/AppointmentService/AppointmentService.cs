@@ -89,7 +89,7 @@ namespace GaraMS.Service.Services.AppointmentService
 
 		public async Task<ResultModel> GetAllAppointmentsAsync(string? token)
 		{
-			var validationResult = await ValidateToken(token, new List<int> { 1, 3 });
+			var validationResult = await ValidateToken(token, new List<int> { 1,2, 3 });
 			if (!validationResult.IsSuccess)
 				return validationResult;
 
@@ -112,7 +112,7 @@ namespace GaraMS.Service.Services.AppointmentService
 
 		public async Task<ResultModel> UpdateAppointmentAsync(string? token, int id, AppointmentModel model)
 		{
-			var validationResult = await ValidateToken(token, new List<int> { 1 , 3 });
+			var validationResult = await ValidateToken(token, new List<int> { 1 ,2, 3 });
 			if (!validationResult.IsSuccess)
 				return validationResult;
 
@@ -125,7 +125,7 @@ namespace GaraMS.Service.Services.AppointmentService
 
 		public async Task<ResultModel> UpdateAppointmentStatusAsync(string? token, int id, string status, string reason)
 		{
-			var validationResult = await ValidateToken(token, new List<int> { 3 }); // Example: Only Managers can update status
+			var validationResult = await ValidateToken(token, new List<int> { 2, 3 }); // Example: Only Managers can update status
 			if (!validationResult.IsSuccess)
 				return validationResult;
 

@@ -152,6 +152,18 @@ namespace GaraMS.API.Controllers
 
             return StatusCode(200, shifts);
         }
+        [HttpGet("employee-shift")]
+        public async Task<IActionResult> GetEmployeeShifts()
+        {
+            var token = Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+            var decodeModel = _token.decode(token);
+            var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 2, 3 });
+            var useid = Convert.ToInt32(decodeModel.userid);
+            var em = await _context.Employees.FirstOrDefaultAsync(x => x.UserId == useid);
+            var es = await _context.EmployeeShifts.Include(x => x.Shift).Where(x => x.EmployeeId == em.EmployeeId).ToListAsync();
+
+            return StatusCode(200, es);
+        }
 
     }
 }

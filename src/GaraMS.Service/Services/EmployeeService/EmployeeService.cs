@@ -56,7 +56,7 @@ namespace GaraMS.Service.Services.EmployeeService
 
         public async Task<ResultModel> GetAllEmployeesAsync(string? token)
         {
-            var validationResult = await ValidateToken(token, new List<int> { 3 });
+            var validationResult = await ValidateToken(token, new List<int> { 1, 2, 3 });
             if (!validationResult.IsSuccess)
                 return validationResult;
 
