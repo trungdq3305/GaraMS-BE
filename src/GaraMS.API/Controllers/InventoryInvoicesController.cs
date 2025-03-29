@@ -334,7 +334,7 @@ namespace GaraMS.API.Controllers
             var list = await _context.InventoryWarranties.Include(a => a.InventoryInvoiceDetail)
                 .ThenInclude(a => a.InventoryInvoice)
                 .Include(a => a.Appointment)
-                .Where(a => a.InventoryInvoiceDetail.InventoryInvoice.UserId == useid).ToListAsync();
+                .Where(a => a.InventoryInvoiceDetail.InventoryInvoice.UserId == useid || a.Appointment.Vehicle.Customer.UserId == useid).ToListAsync();
             return Ok(list);
         }
     }
