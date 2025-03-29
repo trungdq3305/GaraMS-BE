@@ -178,8 +178,8 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
 
 						_context.WarrantyHistories.Add(warrantyHistory);
 					}
-					
-                    foreach (var item in service.ServiceInventories)
+					var b = await _context.ServiceInventories.Include(a => a.Inventory).Where(a => a.ServiceId == service.ServiceId).ToListAsync();
+                    foreach (var item in b)
                     {
 						var a = item.Inventory.WarrantyPeriod;
 						var inventoryWarranty = new InventoryWarranty
