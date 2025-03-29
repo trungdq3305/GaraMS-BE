@@ -80,6 +80,7 @@ namespace GaraMS.Data.Repositories.InventoryRepo
 					Unit = i.Unit,
 					InventoryPrice = i.Price,
 					Status = i.Status,
+					WarrantyPeriod = i.WarrantyPeriod,
 					InventorySuppliers = i.InventorySuppliers.Select(isup => new SupplierModel
 					{
 						SupplierId = isup.Supplier.SupplierId,
