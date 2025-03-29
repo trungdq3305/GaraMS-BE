@@ -294,3 +294,11 @@ CREATE TABLE InventoryWarranty (
 -- Thêm cột warrantyperiod vào bảng Inventories
 ALTER TABLE Inventories
 ADD WarrantyPeriod INT;
+
+ALTER TABLE InventoryWarranty
+ADD AppointmentId INT;
+
+-- Thiết lập khóa ngoại cho AppointmentId tham chiếu đến bảng Appointments
+ALTER TABLE InventoryWarranty
+ADD CONSTRAINT FK_InventoryWarranty_Appointment
+FOREIGN KEY (AppointmentId) REFERENCES Appointments(AppointmentId);

@@ -24,6 +24,12 @@ public partial class InventoryWarranty
 
     public int? InventoryInvoiceDetailId { get; set; }
 
+    public int? AppointmentId { get; set; }
+
+    [ForeignKey("AppointmentId")]
+    [InverseProperty("InventoryWarranties")]
+    public virtual Appointment Appointment { get; set; }
+
     [ForeignKey("InventoryInvoiceDetailId")]
     [InverseProperty("InventoryWarranties")]
     public virtual InventoryInvoiceDetail InventoryInvoiceDetail { get; set; }
