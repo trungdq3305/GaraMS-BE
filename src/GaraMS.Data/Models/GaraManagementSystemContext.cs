@@ -197,6 +197,8 @@ public partial class GaraManagementSystemContext : DbContext
 
             entity.Property(e => e.Status).HasDefaultValue(true);
 
+            entity.HasOne(d => d.Appointment).WithMany(p => p.InventoryWarranties).HasConstraintName("FK_InventoryWarranty_Appointment");
+
             entity.HasOne(d => d.InventoryInvoiceDetail).WithMany(p => p.InventoryWarranties).HasConstraintName("FK__Inventory__Inven__6BE40491");
         });
 
