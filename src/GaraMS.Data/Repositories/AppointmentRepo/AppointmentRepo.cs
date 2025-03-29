@@ -44,16 +44,33 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
                     }
                 }
             }
+			DateTime appointmentDate = model.Date.Value;
+			int appointmentMonth = appointmentDate.Month;
+			TimeSpan appointmentTime = appointmentDate.TimeOfDay;
+            var employeeShifts = _context.EmployeeShifts
+    .Include(es => es.Shift) // Join với Shift
+    .Where(es => es.EmployeeId == model.EmployeeId
+              && es.Month == appointmentMonth)
+    .AsEnumerable()  // Chuyển sang xử lý trên bộ nhớ (RAM)
+    .Where(es => es.Shift.StartTime <= TimeOnly.FromTimeSpan(appointmentTime)
+              && es.Shift.EndTime >= TimeOnly.FromTimeSpan(appointmentTime))
+    .FirstOrDefault();
 
-            // Nếu kiểm tra xong không có lỗi, bắt đầu thêm appointment
-            var appointment = new Appointment
+            // Nếu không có ca làm phù hợp
+            if (employeeShifts == null)
+			{
+				throw new Exception("Không thể đặt lịch vì không có ca làm phù hợp.");
+			}
+			// Nếu kiểm tra xong không có lỗi, bắt đầu thêm appointment
+			var appointment = new Appointment
             {
                 Date = model.Date,
                 Note = model.Note,
                 Status = "Pending",
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                VehicleId = model.VehicleId
+                VehicleId = model.VehicleId,
+				EmployeeId = model.EmployeeId
             };
 
             _context.Appointments.Add(appointment);
