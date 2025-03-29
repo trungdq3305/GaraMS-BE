@@ -13,7 +13,8 @@ namespace GaraMS.Data.ViewModels.AppointmentModel
 		public string Note { get; set; }
 		public string Status { get; set; }
 		public int? VehicleId { get; set; }
-		public List<int> ServiceIds { get; set; } = new List<int>();
+        public int? EmployeeId { get; set; }
+        public List<int> ServiceIds { get; set; } = new List<int>();
 	}
 
     public class RecentAppointmentDTO
