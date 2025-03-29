@@ -42,6 +42,8 @@ public partial class GaraManagementSystemContext : DbContext
 
     public virtual DbSet<InventorySupplier> InventorySuppliers { get; set; }
 
+    public virtual DbSet<InventoryWarranty> InventoryWarranties { get; set; }
+
     public virtual DbSet<Invoice> Invoices { get; set; }
 
     public virtual DbSet<Manager> Managers { get; set; }
@@ -187,6 +189,15 @@ public partial class GaraManagementSystemContext : DbContext
             entity.HasOne(d => d.Inventory).WithMany(p => p.InventorySuppliers).HasConstraintName("FK__Inventory__Inven__339FAB6E");
 
             entity.HasOne(d => d.Supplier).WithMany(p => p.InventorySuppliers).HasConstraintName("FK__Inventory__Suppl__3493CFA7");
+        });
+
+        modelBuilder.Entity<InventoryWarranty>(entity =>
+        {
+            entity.HasKey(e => e.InventoryWarrantyId).HasName("PK__Inventor__1C8DF49A7592AE77");
+
+            entity.Property(e => e.Status).HasDefaultValue(true);
+
+            entity.HasOne(d => d.InventoryInvoiceDetail).WithMany(p => p.InventoryWarranties).HasConstraintName("FK__Inventory__Inven__6BE40491");
         });
 
         modelBuilder.Entity<Invoice>(entity =>

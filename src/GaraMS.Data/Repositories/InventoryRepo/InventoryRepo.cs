@@ -45,6 +45,7 @@ namespace GaraMS.Data.Repositories.InventoryRepo
 				Unit = model.Unit,
 				Price = model.InventoryPrice,
 				Status = int.TryParse(model.Unit, out int unit) && unit > 0,
+				WarrantyPeriod = model.WarrantyPeriod,
 				CreatedAt = DateTime.UtcNow,
 				UpdatedAt = DateTime.UtcNow
 			};
@@ -111,6 +112,7 @@ namespace GaraMS.Data.Repositories.InventoryRepo
 			inventory.Unit = model.Unit;
 			inventory.Price = model.InventoryPrice;
 			inventory.Status = int.TryParse(model.Unit, out int unit) && unit > 0;
+			inventory.WarrantyPeriod = model.WarrantyPeriod;
 			inventory.UpdatedAt = DateTime.UtcNow;
 
 			_context.Inventories.Update(inventory);

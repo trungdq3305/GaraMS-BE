@@ -28,4 +28,7 @@ public partial class InventoryInvoiceDetail
     [ForeignKey("InventoryInvoiceId")]
     [InverseProperty("InventoryInvoiceDetails")]
     public virtual InventoryInvoice InventoryInvoice { get; set; }
+
+    [InverseProperty("InventoryInvoiceDetail")]
+    public virtual ICollection<InventoryWarranty> InventoryWarranties { get; set; } = new List<InventoryWarranty>();
 }

@@ -33,6 +33,8 @@ public partial class Inventory
     [Column(TypeName = "datetime")]
     public DateTime? UpdatedAt { get; set; }
 
+    public int? WarrantyPeriod { get; set; }
+
     [InverseProperty("Inventory")]
     public virtual ICollection<InventoryInvoiceDetail> InventoryInvoiceDetails { get; set; } = new List<InventoryInvoiceDetail>();
 

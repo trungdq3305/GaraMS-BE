@@ -255,6 +255,42 @@ BEGIN
 END;
 GO
 
+-- T?o b?ng InventoryInvoice
+CREATE TABLE InventoryInvoice (
+    InventoryInvoiceId INT IDENTITY(1,1) PRIMARY KEY,
+    Price DECIMAL(18,2),
+    DiliverType NVARCHAR(100),
+    PaymentMethod NVARCHAR(100),
+    TotalAmount DECIMAL(18,2),
+    Status NVARCHAR(50) ,
+    Date DATETIME DEFAULT GETDATE()
+);
+
+-- T?o b?ng InventoryInvoiceDetail
+CREATE TABLE InventoryInvoiceDetail (
+    InventoryInvoiceDetailId INT IDENTITY(1,1) PRIMARY KEY,
+    InventoryId INT FOREIGN KEY REFERENCES Inventories(InventoryId),
+    InventoryInvoiceId INT FOREIGN KEY REFERENCES InventoryInvoice(InventoryInvoiceId),
+    Price DECIMAL(18,2)
+);
+
+ALTER TABLE InventoryInvoice
+ADD UserId INT;
+
+ALTER TABLE InventoryInvoice
+ADD CONSTRAINT FK_InventoryInvoice_User
+FOREIGN KEY (UserId) REFERENCES Users(UserId);
 
 
+-- Thêm bảng InventoryWarranty
+CREATE TABLE InventoryWarranty (
+    InventoryWarrantyId INT IDENTITY(1,1) PRIMARY KEY,
+    StartDay DATETIME NOT NULL,
+    EndDay DATETIME NOT NULL,
+    Status BIT DEFAULT 1,
+    InventoryInvoiceDetailId INT FOREIGN KEY REFERENCES InventoryInvoiceDetail(InventoryInvoiceDetailId)
+);
 
+-- Thêm cột warrantyperiod vào bảng Inventories
+ALTER TABLE Inventories
+ADD WarrantyPeriod INT;

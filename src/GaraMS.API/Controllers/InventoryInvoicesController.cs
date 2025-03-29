@@ -177,9 +177,19 @@ namespace GaraMS.API.Controllers
                     using (var newContext = new GaraManagementSystemContext())
                     {
                         newContext.Inventories.Update(inven);
+                        var a = new InventoryWarranty
+                        {
+                            StartDay = DateTime.Now,
+                            EndDay = DateTime.Now.AddDays((double)inven.WarrantyPeriod),
+                            Status = true,
+                            InventoryInvoiceDetailId = item.InventoryInvoiceDetailId
+                        };
+                        newContext.InventoryWarranties.Add(a);
                         await newContext.SaveChangesAsync();
                     }
                 }
+                
+
             }
 
             ii.Status = "False";
@@ -308,6 +318,23 @@ namespace GaraMS.API.Controllers
                 Console.WriteLine($"Error in CreatePaymentUrl: {ex}");
                 throw;
             }
+        }
+
+        [HttpGet("Get-Inven-Warranties")]
+        public async Task<IActionResult> GetAllInvenWarrantyOfUser()
+        {
+            var token = Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+            var decodeModel = _token.decode(token);
+            var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 1 });
+            var useid = Convert.ToInt32(decodeModel.userid);
+            if (!isValidRole)
+            {
+                return Unauthorized("Bạn không có quyền truy cập.");
+            }
+            var list = await _context.InventoryWarranties.Include(a => a.InventoryInvoiceDetail)
+                .ThenInclude(a => a.InventoryInvoice)
+                .Where(a => a.InventoryInvoiceDetail.InventoryInvoice.UserId == useid).ToListAsync();
+            return Ok(list);
         }
     }
 }
