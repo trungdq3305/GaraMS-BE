@@ -2,6 +2,7 @@
 using GaraMS.Data.ViewModels.AppointmentModel;
 using GaraMS.Data.ViewModels.AppointmentModel;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -177,7 +178,21 @@ namespace GaraMS.Data.Repositories.AppointmentRepo
 
 						_context.WarrantyHistories.Add(warrantyHistory);
 					}
-				}
+					
+                    foreach (var item in service.ServiceInventories)
+                    {
+						var a = item.Inventory.WarrantyPeriod;
+						var inventoryWarranty = new InventoryWarranty
+						{
+							StartDay = DateTime.Now,
+							EndDay = DateTime.Now.AddDays((double)a),
+							Status = true,
+							AppointmentId = appointment.AppointmentId
+						};
+						_context.InventoryWarranties.Add(inventoryWarranty);
+                    }
+                }
+				
 				// Save warranty histories separately
 				await _context.SaveChangesAsync();
 				
