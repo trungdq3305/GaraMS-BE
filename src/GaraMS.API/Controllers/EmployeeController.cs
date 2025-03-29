@@ -165,5 +165,33 @@ namespace GaraMS.API.Controllers
             return StatusCode(200, es);
         }
 
+        [HttpDelete("employee-shift")]
+        public async Task<IActionResult> DeleteEmployeeShifts([FromQuery]  int employeeShiftId)
+        {
+            var token = Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+            var decodeModel = _token.decode(token);
+            var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 2, 3 });
+            var useid = Convert.ToInt32(decodeModel.userid);
+            var es = await _context.EmployeeShifts.FirstOrDefaultAsync(a => a.EmployeeShiftId == employeeShiftId);
+            _context.EmployeeShifts.Remove(es);
+            await _context.SaveChangesAsync();
+            return StatusCode(200, es);
+        }
+
+        [HttpGet("employee-appointment")]
+        public async Task<IActionResult> GetEmployeeAppointments()
+        {
+            var token = Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+            var decodeModel = _token.decode(token);
+            var isValidRole = _accountService.IsValidRole(decodeModel.role, new List<int>() { 2, 3 });
+            var useid = Convert.ToInt32(decodeModel.userid);
+            var em = await _context.Employees.FirstOrDefaultAsync(x => x.UserId == useid);
+            var es = await _context.Appointments.Include(x => x.Vehicle)
+                .ThenInclude(x => x.Customer)
+                .ThenInclude(x=> x.User)
+                .Where(x => x.EmployeeId == em.EmployeeId).ToListAsync();
+
+            return StatusCode(200, es);
+        }
     }
 }
